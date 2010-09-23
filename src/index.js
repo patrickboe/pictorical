@@ -131,7 +131,49 @@ pictorical={
 			acceptSelections();
 		},
 		displayAreaPhotos: function(selectedCircle){
-			
+			var yqlQuery="select * from flickr.photos.search(0,50)" +
+			" where lat="+ String(selectedCircle.getCenter().lat()) +
+			" and lon="+ String(selectedCircle.getCenter().lng()) +
+			" and radius="+ String(selectedCircle.getRadius()/1000.0) +
+			" and min_upload_date='2003-12-31 00:00:00' and license='1,2,3,4,5,6'" +
+			" and sort='date-taken-asc' and media='photos' and" +
+			" extras='license,date_taken,owner_name'";
+			$.getJSON("http://query.yahooapis.com/v1/public/yql?callback=?",
+				{
+						q: yqlQuery,
+						format: "json"
+				},
+				pictorical.resultDiagnostics
+			);
+		},
+		resultDiagnostics: function(data){
+			if(!!data.query.results){
+				var getKeys=function(obj){
+					var arrKeys=[]
+					for (var key in obj) {
+					    if (obj.hasOwnProperty(key)) {
+					    	arrKeys.push(key+"="+String(obj[key]));
+					    }
+					}
+					return arrKeys;
+				};
+				var photoDescriptions=[];
+				var addPhoto=function(obj){
+					photoDescriptions.push(getKeys(obj).join(","));
+				}
+				if(data.query.count>1){
+					//array of photos
+					for (var i in data.query.results.photo){
+						addPhoto(data.query.results.photo[i]);
+					}
+				} else {
+					//single photo
+					addPhoto(data.query.results.photo);
+				}
+				alert(String(data.query.count) + " photos: "+ photoDescriptions.join(" "));
+			} else {
+				alert("no photos there.");
+			}
 		}
 }
 
