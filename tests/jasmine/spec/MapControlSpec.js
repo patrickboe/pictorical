@@ -1,27 +1,35 @@
 setFixtures('<div id="map_canvas"></div>');
 
 describe("MapControl", function() {
-	var setup=function(){
-		var HardenaRestaurant = new google.maps.LatLng(39.928431,-75.171257);
-		var myOptions = {
-		  zoom: 8,
-		  center: HardenaRestaurant,
-		  mapTypeId: google.maps.MapTypeId.ROADMAP
-		};
-		var map = new google.maps.Map(document.getElementById("map_canvas"),myOptions);
+	var circle=null;
+	var selectCircle=function(){
+		circle=1;
+	};
+	var map=initMap(selectCircle);
+	
+	var expectEmptinessBehavior=function(){
+		it("should have no circle", function(){
+			expect(circle).toBeNull();
+		});
+		
+		it("should create a circle at a click location", function(){
+			
+		});
 	};
 	
-	it("should start empty", function(){});
-	
-	describe("when empty", function(){
-		it("should have no circle", function(){});
-		
-		it("should create a circle at a click location", function(){});
+	describe("initial screen", function(){
+		it("should show a street map centered at Hardena Restaurant (39.928431,-75.171257) in Philadelphia, fully zoomed out", function(){
+			expect(map.getZoom()).toEqual(1);
+			expect(map.getCenter().lat()).toEqual(39.928431);
+			expect(map.getCenter().lon()).toEqual(-75.171257);
+			expect(map.getMapTypeId()).toEqual("ROADMAP");
+		});
+		expectEmptinessBehavior();
 	});
 	
 	describe("map with a circle", function(){
 		
-		it("should change circle size to follow mouse", function(){});
+		it("should change circle radius to follow mouse", function(){});
 		
 		it("should display the chosen circle after a second click", function(){});
 		
