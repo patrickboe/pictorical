@@ -143,10 +143,35 @@ pictorical={
 						q: yqlQuery,
 						format: "json"
 				},
-				pictorical.resultDiagnostics
+				function(data){
+					if(selectedCircle.getMap()!=null){
+						pictorical.acceptFlickrResults(data);
+					}
+				}
 			);
 		},
-		resultDiagnostics: function(data){
+		acceptFlickrResults:function(data){
+			var photos=[];
+			if(!!data.query.results){
+				if(data.query.count==1){
+					//make the result an array
+					photos.push(data.query.results.photo);
+				} else {
+					//it's already an array
+					photos=data.query.results.photo;
+				}
+				this.showSlides(photos);
+			}
+		},
+		showSlides: function(photos){
+			$("#map_canvas").hide();
+			$("#slideshow").show().append("<p>"+JSON.stringify(photos)+"</p>");
+		},
+		showMap: function(){
+			$("#slideshow").hide();
+			$("#map_canvas").show();
+		},
+		flickrResultDiagnostics: function(data){
 			if(!!data.query.results){
 				var getKeys=function(obj){
 					var arrKeys=[]
@@ -177,4 +202,10 @@ pictorical={
 		}
 }
 
-$(pictorical.showCircleSelectMap(pictorical.displayAreaPhotos));
+$(function(){
+	$("a.back").click(function(){
+		pictorical.showMap();
+		return false;
+	});
+	pictorical.showCircleSelectMap(pictorical.displayAreaPhotos);
+});
