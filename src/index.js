@@ -163,15 +163,25 @@ pictorical={
 		},
 		
 		requestPanoramioPhotos: function(selectedCircle,photosFoundCallback){
+			var bounds=selectedCircle.getBounds();
+			var ne=bounds.getNorthEast();
+			var sw=bounds.getSouthWest();
+			/**
+			 * Turns out they don't really mean min and max, they mean westernmost & 
+			 * easternmost / northernmost & southernmost - tested on the international dateline.
+			 * This method still seems to work on the south pole, though I don't think 
+			 * I quite comprehend why. Is this wrong, and do you care? If so, let me 
+			 * know. -Patrick Boe
+			 */
 			$.getJSON("http://www.panoramio.com/map/get_panoramas.php?callback=?",
 					{
 						set:"public",
 						from:0,
-						to:20,
-						minx:-180,
-						miny:-90,
-						maxx:180,
-						maxy:90,
+						to:50,
+						minx:sw.lng(),
+						miny:sw.lat(),
+						maxx:ne.lng(),
+						maxy:ne.lat(),
 						size:"medium"
 					},
 					function(data){
@@ -198,7 +208,7 @@ pictorical={
 		},
 		
 		requestFlickrPhotos: function(selectedCircle, photosFoundCallback){
-			var yqlQuery="select * from flickr.photos.search(0,20)" +
+			var yqlQuery="select * from flickr.photos.search(0,50)" +
 			" where lat="+ String(selectedCircle.getCenter().lat()) +
 			" and lon="+ String(selectedCircle.getCenter().lng()) +
 			" and radius="+ String(selectedCircle.getRadius()/1000.0) +
@@ -214,7 +224,7 @@ pictorical={
 					var photos=[];
 					if(!!data.query.results){
 						if(data.query.count==1){
-							//make the result an array
+							//make the result an arraynorth
 							photos.push(data.query.results.photo);
 						} else {
 							//it's already an array
