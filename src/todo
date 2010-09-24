@@ -1,4 +1,4 @@
 research/come up with/support a versioning scheme
 back button support from slideshow
-add forward and back clickers to image portions
-resolve bug that disables image maps in certain pictures
+show a loading dialog during search
+adjust image map on window resize
