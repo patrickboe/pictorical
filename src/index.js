@@ -1,16 +1,12 @@
 //extend google's LatLng to include a distance finding method
 google.maps.LatLng.prototype.distanceTo=
-// This distance formula is adapted slightly for google's object model from Chris Veness' code under the following copyright:
+/** 
+ * This distance formula is adapted slightly for google's object model from Chris Veness' code under 
+ * the following copyright, license details available at the included url:
+ */
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 /*  Latitude/longitude spherical geodesy formulae & scripts (c) Chris Veness 2002-2010            */
 /*   - www.movable-type.co.uk/scripts/latlong.html                                                */
-/*                                                                                                */
-/*  Sample usage:                                                                                 */
-/*    var p1 = new LatLon(51.5136, -0.0983);                                                      */
-/*    var p2 = new LatLon(51.4778, -0.0015);                                                      */
-/*    var dist = p1.distanceTo(p2);          // in km                                             */
-/*    var brng = p1.bearingTo(p2);           // in degrees clockwise from north                   */
-/*    ... etc                                                                                     */
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 /**
  * Returns the distance from this point to the supplied point, in meters 
@@ -57,7 +53,7 @@ pictorical={
 				var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
 				var startOptions=
 								{
-									zoom: 12,
+									zoom: 10,
 									center: HardenaRestaurant,
 									mapTypeId: google.maps.MapTypeId.ROADMAP
 								}
@@ -117,20 +113,92 @@ pictorical={
 		},
 		
 		displayAreaPhotos: function(selectedCircle){
+			var requestsMade=0;
+			var responsesReceived=0;
+			var allPhotos=[];
+			var timeoutID;
+			var displayAllPhotos=function(){
+				allPhotos.sort(function(a,b){
+					if(a.getDate() > b.getDate()) return 1;
+					return -1;
+				});
+				pictorical.showSlides(allPhotos);
+			};
+			var makeRequest=function(requestFunction){
+				requestsMade++;
+				requestFunction(selectedCircle,acceptPhotos);
+			};
+			var cancelTimeout=function(){
+				window.clearTimeout(timeoutID);
+				timeoutID=null;
+			};
 			var acceptPhotos=function(photos){
-				if(selectedCircle.getMap()!=null){
-					photos.sort(function(a,b){
-						if(a.getDate() > b.getDate()) return 1;
-						return -1;
-					});
-					pictorical.showSlides(photos);
+				responsesReceived++;
+				if(!!timeoutID){
+					if(selectedCircle.getMap()!=null){
+						allPhotos=allPhotos.concat(photos);
+						if(responsesReceived==requestsMade){
+							cancelTimeout();
+							displayAllPhotos();
+						}
+					} else {
+						cancelTimeout();
+					}
 				}
 			}
-			pictorical.requestFlickrPhotos(selectedCircle,acceptPhotos);
+			makeRequest(pictorical.requestFlickrPhotos);
+			makeRequest(pictorical.requestPanoramioPhotos);
+			timeoutID=window.setTimeout(function(){
+				if(selectedCircle.getMap()!=null){
+					displayAllPhotos();
+				}
+				timeoutID=null;
+			},5000);
+		},
+		
+		panoramioPhoto: function(rawPhoto){
+			this.getID=function(){return "pano"+String(rawPhoto.photo_id)}
+			this.getUrl=function(){return rawPhoto.photo_file_url};
+			this.getDate=function(){return new Date(rawPhoto.upload_date)};
+		},
+		
+		requestPanoramioPhotos: function(selectedCircle,photosFoundCallback){
+			$.getJSON("http://www.panoramio.com/map/get_panoramas.php?callback=?",
+					{
+						set:"public",
+						from:0,
+						to:20,
+						minx:-180,
+						miny:-90,
+						maxx:180,
+						maxy:90,
+						size:"medium"
+					},
+					function(data){
+						var photos=[];
+						if(!!data.count){
+							photos=data.photos;
+						}
+						constructArray(photos,pictorical.panoramioPhoto);
+						photosFoundCallback(photos);
+					}
+				);
+		},
+		
+		flickrPhoto: function(rawPhoto){
+			function parseFlickrDate(flickrDate){
+				var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
+				var dateParts=dateOnly.split("-");
+				return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
+			}
+			var _date=parseFlickrDate(rawPhoto.datetaken);
+			this.getID=function(){return "flickr"+String(rawPhoto.id)}
+			this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
+			this.getDate=function(){return _date};
 		},
 		
 		requestFlickrPhotos: function(selectedCircle, photosFoundCallback){
-			var yqlQuery="select * from flickr.photos.search(0,5)" +
+			var yqlQuery="select * from flickr.photos.search(0,20)" +
 			" where lat="+ String(selectedCircle.getCenter().lat()) +
 			" and lon="+ String(selectedCircle.getCenter().lng()) +
 			" and radius="+ String(selectedCircle.getRadius()/1000.0) +
@@ -153,7 +221,7 @@ pictorical={
 							photos=data.query.results.photo;
 						}
 					}
-					transformArray(photos,function(photo){return new pictorical.flickrPhoto(photo)})
+					constructArray(photos,pictorical.flickrPhoto);
 					photosFoundCallback(photos)
 				}
 			);
@@ -178,7 +246,7 @@ pictorical={
 			   };
 			var $photoList=$("#slideshow ul");
 			var loadPhoto=function(photo){
-				$photoList.append('<li><label>'+String(photo.getDate())+'</label>'+
+				$photoList.append('<li><label>'+photo.getDate().toLocaleDateString()+'</label>'+
 				'<img usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
 				'<map name="p'+photo.getID()+'">'+
 				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous"/>'+
@@ -206,19 +274,11 @@ pictorical={
 		showMap: function(){
 			$("#slideshow").hide().find("ul.slideshow").empty();
 			$("#map_canvas").show();
-		},
-		
-		flickrPhoto: function(rawPhoto){
-			this.getID=function(){return "flickr"+String(rawPhoto.id)}
-			this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
-			this.getDate=function(){return rawPhoto.datetaken};
 		}
 }
 
-transformArray=function(arr,lambda){
-	for (var i in arr){
-		arr[i]=lambda(arr[i]);
-	}
+function constructArray(arr,constructor){
+	for (var i in arr) arr[i]=new constructor(arr[i]);
 }
 
 $(function(){
