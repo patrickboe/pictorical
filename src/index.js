@@ -130,6 +130,7 @@ pictorical={
 			map=drawStartingMap();
 			acceptSelections();
 		},
+		
 		displayAreaPhotos: function(selectedCircle){
 			var yqlQuery="select * from flickr.photos.search(0,200)" +
 			" where lat="+ String(selectedCircle.getCenter().lat()) +
@@ -150,6 +151,7 @@ pictorical={
 				}
 			);
 		},
+		
 		acceptFlickrResults:function(data){
 			var photos=[];
 			if(!!data.query.results){
@@ -167,55 +169,51 @@ pictorical={
 				this.showSlides(photos);
 			}
 		},
+		
 		showSlides: function(photos){
 			var $photoList=$("#slideshow ul");
 			var toFlickrUrl=function(photo){
 				return "http://farm"+photo.farm+".static.flickr.com/"+photo.server+"/"+photo.id+"_"+photo.secret+".jpg"
 			};
 			var loadPhoto=function(photo){
-				$photoList.append('<li><label>'+String(photo.datetaken)+'</label><img src="'+toFlickrUrl(photo)+'"/></li>');
+				$photoList.append('<li><label>'+String(photo.datetaken)+'</label>'+
+				'<img usemap="p'+photo.id+'" src="'+toFlickrUrl(photo)+'"/>'+
+				'<map name="p'+photo.id+'">'+
+				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous" />'+
+				'<area shape="rect" class="next" coords="50,0,90,40" href="#next" title="Advance to Next Photo" alt="Next" />'+
+				'</map></li>');
 			};
 			for(var i in photos){
 				loadPhoto(photos[i]);
 			}
 			$("#map_canvas").hide();
-			$("#slideshow").show().find("ul.slideshow").cycle({
-																   prev:   '.prev', 
-																   next:   '.next'
-															   });
+			$("#slideshow").show().find("ul.slideshow")
+				.cycle({
+					   timeout: 0,
+					   prev:   '.prev', 
+					   next:   '.next',
+					   after:	function(){
+						   //set up img map areas
+						   var $this=$(this);
+						   var img=$this.find("img")[0];
+						   var areaW=img.clientWidth/2-5
+						   var prevRightEdge=String(areaW);
+						   var nextLeftEdge=String(areaW+10);
+						   var w=String(img.clientWidth)-5;
+						   var h=String(img.clientHeight)-5;
+						   $this
+						   	.find("area.prev")
+						   		.attr("coords","5,5,"+prevRightEdge+","+h)
+						   	.end()
+						   	.find("area.next")
+					   			.attr("coords", nextLeftEdge+",5,"+w+","+h)
+					   }
+				   });
 		},
+		
 		showMap: function(){
-			$("#slideshow").hide();
+			$("#slideshow").hide().find("ul.slideshow").empty();
 			$("#map_canvas").show();
-		},
-		flickrResultDiagnostics: function(data){
-			if(!!data.query.results){
-				var getKeys=function(obj){
-					var arrKeys=[]
-					for (var key in obj) {
-					    if (obj.hasOwnProperty(key)) {
-					    	arrKeys.push(key+"="+String(obj[key]));
-					    }
-					}
-					return arrKeys;
-				};
-				var photoDescriptions=[];
-				var addPhoto=function(obj){
-					photoDescriptions.push(getKeys(obj).join(","));
-				}
-				if(data.query.count>1){
-					//array of photos
-					for (var i in data.query.results.photo){
-						addPhoto(data.query.results.photo[i]);
-					}
-				} else {
-					//single photo
-					addPhoto(data.query.results.photo);
-				}
-				alert(String(data.query.count) + " photos: "+ photoDescriptions.join(" "));
-			} else {
-				alert("no photos there.");
-			}
 		}
 }
 
