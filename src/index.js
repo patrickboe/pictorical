@@ -88,6 +88,7 @@ pictorical={
 					google.maps.event.removeListener(mapMoveListener);
 					google.maps.event.removeListener(mapClickListener);
 					google.maps.event.removeListener(doneOnCircleListener);
+					window.location.hash="#map_selection";
 					selectionCallback(circle);
 					map.setCenter(circle.getCenter());
 					map.fitBounds(circle.getBounds());
@@ -122,7 +123,7 @@ pictorical={
 					if(a.getDate() > b.getDate()) return 1;
 					return -1;
 				});
-				pictorical.showSlides(allPhotos);
+				pictorical.loadSlides(allPhotos);
 			};
 			var makeRequest=function(requestFunction){
 				requestsMade++;
@@ -237,7 +238,7 @@ pictorical={
 			);
 		},
 		
-		showSlides: function(photos){
+		loadSlides: function(photos){
 			var adjustImageMap=function(){
 				   //set up img map areas for current photo
 				   var $this=$(this);
@@ -263,6 +264,7 @@ pictorical={
 				'<area shape="rect" class="next" coords="50,0,90,40" href="#next" title="Advance to Next Photo" alt="Next"/>'+
 				'</map></li>');
 			};
+			$("#slideshow ul.slideshow").empty();
 			//add photos to the DOM
 			for(var i in photos){
 				loadPhoto(photos[i]);
@@ -273,17 +275,23 @@ pictorical={
 				$("#slideshow").show()
 					.find("ul.slideshow")
 						.cycle({
-						   timeout: 0,
+						   timeout: 4000,
 						   prev:   '.prev', 
 						   next:   '.next',
 						   after:	adjustImageMap
 						});
+				window.location.hash="#slideshow";
 			});
 		},
 		
 		showMap: function(){
-			$("#slideshow").hide().find("ul.slideshow").empty();
+			$("#slideshow").hide();
 			$("#map_canvas").show();
+		},
+		
+		showSlides: function(){
+			$("#map_canvas").hide();
+			$("#slideshow").show();
 		}
 }
 
@@ -291,10 +299,14 @@ function constructArray(arr,constructor){
 	for (var i in arr) arr[i]=new constructor(arr[i]);
 }
 
+$(window).hashchange(function(){
+	if(window.location.hash==""||window.location.hash=="#map_selection") pictorical.showMap();
+	else pictorical.showSlides();
+});
+
 $(function(){
-	$("a.back").click(function(){
-		pictorical.showMap();
-		return false;
-	});
+	if("hash" in window.location && window.location.hash.length){
+		window.location="";
+	}
 	pictorical.loadMap(pictorical.displayAreaPhotos);
 });
