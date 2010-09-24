@@ -1,5 +1,5 @@
 pictorical={
-		showCircleSelectMap: function(selectionCallback) {
+		loadMap: function(selectionCallback) {
 			var map;
 			var circle;
 			var mapClickListener=null;
@@ -13,7 +13,7 @@ pictorical={
 				var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
 				var startOptions=
 								{
-									zoom: 16,
+									zoom: 12,
 									center: HardenaRestaurant,
 									mapTypeId: google.maps.MapTypeId.ROADMAP
 								}
@@ -131,12 +131,12 @@ pictorical={
 			acceptSelections();
 		},
 		displayAreaPhotos: function(selectedCircle){
-			var yqlQuery="select * from flickr.photos.search(0,50)" +
+			var yqlQuery="select * from flickr.photos.search(0,200)" +
 			" where lat="+ String(selectedCircle.getCenter().lat()) +
 			" and lon="+ String(selectedCircle.getCenter().lng()) +
 			" and radius="+ String(selectedCircle.getRadius()/1000.0) +
 			" and min_upload_date='2003-12-31 00:00:00' and license='1,2,3,4,5,6'" +
-			" and sort='date-taken-asc' and media='photos' and" +
+			" and sort='interestingness-desc' and media='photos' and" +
 			" extras='license,date_taken,owner_name'";
 			$.getJSON("http://query.yahooapis.com/v1/public/yql?callback=?",
 				{
@@ -160,12 +160,29 @@ pictorical={
 					//it's already an array
 					photos=data.query.results.photo;
 				}
+				photos.sort(function(a,b){
+					if(a.datetaken > b.datetaken) return 1;
+					return -1;
+				});
 				this.showSlides(photos);
 			}
 		},
 		showSlides: function(photos){
+			var $photoList=$("#slideshow ul");
+			var toFlickrUrl=function(photo){
+				return "http://farm"+photo.farm+".static.flickr.com/"+photo.server+"/"+photo.id+"_"+photo.secret+".jpg"
+			};
+			var loadPhoto=function(photo){
+				$photoList.append('<li><label>'+String(photo.datetaken)+'</label><img src="'+toFlickrUrl(photo)+'"/></li>');
+			};
+			for(var i in photos){
+				loadPhoto(photos[i]);
+			}
 			$("#map_canvas").hide();
-			$("#slideshow").show().append("<p>"+JSON.stringify(photos)+"</p>");
+			$("#slideshow").show().find("ul.slideshow").cycle({
+																   prev:   '.prev', 
+																   next:   '.next'
+															   });
 		},
 		showMap: function(){
 			$("#slideshow").hide();
@@ -207,5 +224,5 @@ $(function(){
 		pictorical.showMap();
 		return false;
 	});
-	pictorical.showCircleSelectMap(pictorical.displayAreaPhotos);
+	pictorical.loadMap(pictorical.displayAreaPhotos);
 });

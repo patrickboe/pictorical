@@ -6,10 +6,16 @@
 	</head>
 	<body>
 		<div id="map_canvas"></div>
-		<div id="slideshow"><a class="back" href="#map_canvas">Back To Map</a></div>
+		<div id="slideshow">
+			<a class="back" href="#map_canvas">Back To Map</a>
+			<a class="prev" href="#prev">Previous</a>
+			<a class="next" href="#next">Next</a>
+			<ul class="slideshow"></ul>
+		</div>
 		
 		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		<script type="text/javascript" src="jquery.cycle.lite.1.0.min.js"></script>
 		<script type="text/javascript" src="index.js"></script>
 	</body>
 </html>
