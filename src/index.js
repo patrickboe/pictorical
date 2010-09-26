@@ -53,7 +53,7 @@ pictorical={
 				var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
 				var startOptions=
 								{
-									zoom: 10,
+									zoom: 4,
 									center: HardenaRestaurant,
 									mapTypeId: google.maps.MapTypeId.ROADMAP
 								}
@@ -113,54 +113,51 @@ pictorical={
 			acceptSelections();
 		},
 		
-		displayAreaPhotos: function(selectedCircle){
-			var requestsMade=0;
-			var responsesReceived=0;
-			var allPhotos=[];
-			var timeoutID;
-			var displayAllPhotos=function(){
-				allPhotos.sort(function(a,b){
-					if(a.getDate() > b.getDate()) return 1;
-					return -1;
-				});
-				pictorical.loadSlides(allPhotos);
-			};
-			var makeRequest=function(requestFunction){
-				requestsMade++;
-				requestFunction(selectedCircle,acceptPhotos);
-			};
-			var cancelTimeout=function(){
-				window.clearTimeout(timeoutID);
-				timeoutID=null;
-			};
-			var acceptPhotos=function(photos){
-				responsesReceived++;
-				if(!!timeoutID){
-					if(selectedCircle.getMap()!=null){
-						allPhotos=allPhotos.concat(photos);
-						if(responsesReceived==requestsMade){
+		createPhotoDisplay: function(sources){
+			return function(selectedCircle){
+				var requestsMade=0;
+				var responsesReceived=0;
+				var allPhotos=[];
+				var timeoutID;
+				var displayAllPhotos=function(){
+					allPhotos.sort(function(a,b){
+						if(a.getDate() > b.getDate()) return 1;
+						return -1;
+					});
+					pictorical.loadSlides(allPhotos);
+				};
+				var makeRequest=function(requestFunction){
+					requestsMade++;
+					requestFunction(selectedCircle,acceptPhotos);
+				};
+				var cancelTimeout=function(){
+					window.clearTimeout(timeoutID);
+					timeoutID=null;
+				};
+				var acceptPhotos=function(photos){
+					responsesReceived++;
+					if(!!timeoutID){
+						if(selectedCircle.getMap()!=null){
+							allPhotos=allPhotos.concat(photos);
+							if(responsesReceived==requestsMade){
+								cancelTimeout();
+								displayAllPhotos();
+							}
+						} else {
 							cancelTimeout();
-							displayAllPhotos();
 						}
-					} else {
-						cancelTimeout();
 					}
 				}
-			}
-			makeRequest(pictorical.requestFlickrPhotos);
-			makeRequest(pictorical.requestPanoramioPhotos);
-			timeoutID=window.setTimeout(function(){
-				if(selectedCircle.getMap()!=null){
-					displayAllPhotos();
+				for(var i in sources){
+					makeRequest(sources[i]);
 				}
-				timeoutID=null;
-			},5000);
-		},
-		
-		panoramioPhoto: function(rawPhoto){
-			this.getID=function(){return "pano"+String(rawPhoto.photo_id)}
-			this.getUrl=function(){return rawPhoto.photo_file_url};
-			this.getDate=function(){return new Date(rawPhoto.upload_date)};
+				timeoutID=window.setTimeout(function(){
+					if(selectedCircle.getMap()!=null){
+						displayAllPhotos();
+					}
+					timeoutID=null;
+				},5000);
+			};
 		},
 		
 		requestPanoramioPhotos: function(selectedCircle,photosFoundCallback){
@@ -190,59 +187,90 @@ pictorical={
 						if(!!data.count){
 							photos=data.photos;
 						}
-						constructArray(photos,pictorical.panoramioPhoto);
+						constructArray(photos,pictorical.PanoramioPhoto);
 						photosFoundCallback(photos);
 					}
 				);
 		},
 		
-		flickrPhoto: function(rawPhoto){
-			function parseFlickrDate(flickrDate){
-				var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
-				var dateParts=dateOnly.split("-");
-				return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
-			}
-			var _date=parseFlickrDate(rawPhoto.datetaken);
-			this.getID=function(){return "flickr"+String(rawPhoto.id)}
-			this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
-			this.getDate=function(){return _date};
+
+		makeFlickrLicenseSnippet: function(license){
+			var snippet="";
+			if(license.url.search('creativecommons.org')>=0){
+				var type=license.url.match(/\/licenses\/([^\/]*)/)[1];
+				snippet='<a rel="license" href="'+license.url+'" title="'+license.name+'">'+
+					'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'/2.0/80x15.png"/></a>'
+			} 
+			snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
+			return snippet;
 		},
 		
-		requestFlickrPhotos: function(selectedCircle, photosFoundCallback){
-			var yqlQuery="select * from flickr.photos.search(0,50)" +
-			" where lat="+ String(selectedCircle.getCenter().lat()) +
-			" and lon="+ String(selectedCircle.getCenter().lng()) +
-			" and radius="+ String(selectedCircle.getRadius()/1000.0) +
-			" and min_upload_date='2003-12-31 00:00:00' and license='1,2,3,4,5,6'" +
-			" and sort='interestingness-desc' and media='photos' and" +
-			" extras='license,date_taken,owner_name'";
-			$.getJSON("http://query.yahooapis.com/v1/public/yql?callback=?",
-				{
-						q: yqlQuery,
-						format: "json"
-				},
-				function(data){
+		createFlickrSource: function()
+		{
+			var apiUrl="http://api.flickr.com/services/rest/?jsoncallback=?";
+			var apiKey='5c047b2b54845211d9662958d1cc5b9d';
+			var licenses=[];
+			var licensesLoaded=function(){};
+			var photosLoaded=function(photosFoundCallback){
+				var processPhotos=function(data){
 					var photos=[];
-					if(!!data.query.results){
-						if(data.query.count==1){
-							//make the result an arraynorth
-							photos.push(data.query.results.photo);
-						} else {
-							//it's already an array
-							photos=data.query.results.photo;
+					if(licenses.length){
+						if(!!data.photos){
+							photos=data.photos.photo;
 						}
+						constructArray(photos,pictorical.FlickrPhotoFactory(licenses));
+						photosFoundCallback(photos)
+					} else{
+						//we don't have license information yet. set this to run when we do.
+						licensesLoaded=function(){
+							processPhotos(data);
+							licencesLoaded=function(){};
+						};
 					}
-					constructArray(photos,pictorical.flickrPhoto);
-					photosFoundCallback(photos)
-				}
-			);
+				};
+				return processPhotos;
+			};
+			$.getJSON(apiUrl,
+					{
+						method: 'flickr.photos.licenses.getInfo',
+						format: 'json',
+						api_key: apiKey,
+					},
+					function(data){
+						if(!!data.licenses.license){
+							licenses=data.licenses.license;
+							licenses.sort(function(a,b){
+								return a.id>b.id
+							});
+							for (var i in licenses) licenses[i]=pictorical.makeFlickrLicenseSnippet(licenses[i]);
+							licensesLoaded();
+						}
+					});
+			return function(selectedCircle, photosFoundCallback){
+				$.getJSON(apiUrl,
+					{
+							method: 'flickr.photos.search',
+							format: 'json',
+							api_key: apiKey,
+							lat: String(selectedCircle.getCenter().lat()),
+							lon: String(selectedCircle.getCenter().lng()),
+							radius: String(selectedCircle.getRadius()/1000.0),
+							min_upload_date: '2003-12-31 00:00:00',
+							license: '1,2,3,4,5,6,7,8',
+							sort: 'interestingness-desc',
+							extras: 'license,date_taken,owner_name',
+							per_page: 50
+					},
+					photosLoaded(photosFoundCallback)
+				);
+			};
 		},
 		
 		loadSlides: function(photos){
 			var adjustImageMap=function(){
 				   //set up img map areas for current photo
 				   var $this=$(this);
-				   var img=$this.find("img")[0];
+				   var img=$this.find("img.slide")[0];
 				   var areaW=Math.round(img.clientWidth/2)-5
 				   var prevRightEdge=String(areaW);
 				   var nextLeftEdge=String(areaW+10);
@@ -258,7 +286,9 @@ pictorical={
 			var $photoList=$("#slideshow ul");
 			var loadPhoto=function(photo){
 				$photoList.append('<li><label>'+photo.getDate().toLocaleDateString()+'</label>'+
-				'<img usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
+						'<a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
+						photo.getLicenseSnippet()+
+				'<img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
 				'<map name="p'+photo.getID()+'">'+
 				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous"/>'+
 				'<area shape="rect" class="next" coords="50,0,90,40" href="#next" title="Advance to Next Photo" alt="Next"/>'+
@@ -270,12 +300,12 @@ pictorical={
 				loadPhoto(photos[i]);
 			}
 			//set the images to cycle once the first one loads
-			$("#slideshow img:first").load(function(){
+			$("#slideshow img.slide:first").load(function(){
 				$("#map_canvas").hide();
 				$("#slideshow").show()
 					.find("ul.slideshow")
 						.cycle({
-						   timeout: 4000,
+						   timeout: 0,
 						   prev:   '.prev', 
 						   next:   '.next',
 						   after:	adjustImageMap
@@ -292,8 +322,44 @@ pictorical={
 		showSlides: function(){
 			$("#map_canvas").hide();
 			$("#slideshow").show();
+		},
+		
+		PanoramioPhoto: function(rawPhoto){
+			this.getID=function(){return "pano"+String(rawPhoto.photo_id);}
+			this.getUrl=function(){return rawPhoto.photo_file_url;};
+			this.getDate=function(){return new Date(rawPhoto.upload_date);};
+			this.getPage=function(){return rawPhoto.photo_url;};
+			this.getOwnerUrl=function(){return rawPhoto.owner_url;};
+			this.getOwnerName=function(){return rawPhoto.owner_name;};
+			this.getTitle=function(){return rawPhoto.photo_title;};
+			this.getLicenseSnippet=function(){return "";};
+			this.getRaw=function(){return JSON.stringify(rawPhoto);};
+		},
+		
+		FlickrPhotoFactory: function(licenses){
+			return function(rawPhoto){
+				function parseFlickrDate(flickrDate){
+					var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
+					var dateParts=dateOnly.split("-");
+					return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
+				}
+				var _date=parseFlickrDate(rawPhoto.datetaken);
+				this.getID=function(){return "flickr"+String(rawPhoto.id);};
+				this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
+				this.getDate=function(){return _date;};
+				this.getPage=function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id};
+				this.getOwnerUrl=function(){return "http://www.flickr.com/people/" + rawPhoto.owner;};
+				this.getOwnerName=function(){return rawPhoto.ownername;};
+				this.getTitle=function(){return rawPhoto.title};
+				this.getLicenseSnippet=function(){return licenses[rawPhoto.license];};
+				this.getRaw=function(){return JSON.stringify(rawPhoto);};
+			}
 		}
 }
+
+function htmlEncode(value){ 
+  return $('<div/>').text(value).html(); 
+} 
 
 function constructArray(arr,constructor){
 	for (var i in arr) arr[i]=new constructor(arr[i]);
@@ -308,5 +374,6 @@ $(function(){
 	if("hash" in window.location && window.location.hash.length){
 		window.location="";
 	}
-	pictorical.loadMap(pictorical.displayAreaPhotos);
+	var displayAreaPhotos=pictorical.createPhotoDisplay([pictorical.createFlickrSource(),pictorical.requestPanoramioPhotos]);
+	pictorical.loadMap(displayAreaPhotos);
 });

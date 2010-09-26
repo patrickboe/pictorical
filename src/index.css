@@ -57,4 +57,4 @@ body { height: 100%; margin: 0px; padding: 0px }
 #map_canvas {  width:100%; height:100% }
 #slideshow { display:none; height:100%; padding: 0px 50px }
 #slideshow ul, #slideshow li {height:100%}
-#slideshow img { height:90% }
+#slideshow img.slide { height:90% }
