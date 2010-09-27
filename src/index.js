@@ -27,8 +27,8 @@ pictorical={
 									mapTypeId: google.maps.MapTypeId.ROADMAP
 								}
 				var map = new google.maps.Map($("#map")[0],startOptions);
-				var pictoricalTitle=$('<div class="legend"><h1>Pictorical</h1> <p>Browse the map, then click to choose a slideshow area.</p></div>')[0];
-				var terms=$($.trim($('footer').html()))[0];
+				var pictoricalTitle=$('header')[0];
+				var terms=$('footer').clone()[0];
 				map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
 				map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
 				return map;

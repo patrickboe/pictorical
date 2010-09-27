@@ -54,11 +54,11 @@ table {
 
 html { height: 100%; font-family:sans-serif; }
 body { height: 100%; margin: 0px; padding: 0px }
-.legend{background-color: white; padding: 5px}
-.legend h1, .legend p{display: inline}
-header h1 {font-size: 3em}
-#map a.terms{background-color: white}
 #map {height: 100%; width: 100%;}
+#map header, #map footer {background-color: white; padding: 5px}
+#map footer {font-size: .7em}
+#map header h1, #map header p, #map header {display: inline}
+#slideshow header h1 {font-size: 3em}
 #slideshow { display:none; height:100%; padding: 0px 50px }
 #slideshow ul, #slideshow li {height:100%}
 #slideshow img.slide { height:85%; display: block; clear: both }
