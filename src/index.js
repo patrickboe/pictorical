@@ -1,42 +1,11 @@
-//extend google's LatLng to include a distance finding method
-google.maps.LatLng.prototype.distanceTo=
-/** 
- * This distance formula is adapted slightly for google's object model from Chris Veness' code under 
- * the following copyright, license details available at the included url:
+/*!
+ * Pictorical Historical Photo Slides Application
+ * Copyright (c) 2010 Patrick Boe
+ * Version: 0.1 (09/27/2010)
+ * Dual licensed under the MIT and GPL licenses:
+ * http://www.opensource.org/licenses/mit-license.php
+ * http://www.gnu.org/licenses/gpl.html
  */
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
-/*  Latitude/longitude spherical geodesy formulae & scripts (c) Chris Veness 2002-2010            */
-/*   - www.movable-type.co.uk/scripts/latlong.html                                                */
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
-/**
- * Returns the distance from this point to the supplied point, in meters 
- * (using Haversine formula)
- *
- * from: Haversine formula - R. W. Sinnott, "Virtues of the Haversine",
- *       Sky and Telescope, vol 68, no 2, 1984
- *
- * @param   {LatLon} point: Latitude/longitude of destination point
- * @param   {Number} [precision=4]: no of significant digits to use for returned value
- * @returns {Number} Distance in meters between this point and destination point
- */
-function(point, precision) {
-  // default 4 sig fig reflects typical 0.3% accuracy of spherical model
-  if (typeof precision == 'undefined') precision = 4;  
-  
-  var R = 6371;
-  var toRadians=function(deg){return Math.PI*deg/180};
-  var lat1 = toRadians(this.lat()), lon1 = toRadians(this.lng());
-  var lat2 = toRadians(point.lat()), lon2 = toRadians(point.lng());
-  var dLat = lat2 - lat1;
-  var dLon = lon2 - lon1;
-
-  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(lat1) * Math.cos(lat2) * 
-          Math.sin(dLon/2) * Math.sin(dLon/2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  var d = R * c * 1000;
-  return d.toFixed(precision);
-}
 
 pictorical={
 		loadMap: function(selectionCallback) {
@@ -397,3 +366,43 @@ $(function(){
 	var displayAreaPhotos=pictorical.createPhotoDisplay([pictorical.flickr.createSource(),pictorical.panoramio.requestPhotos]);
 	pictorical.loadMap(displayAreaPhotos);
 });
+
+//extend google's LatLng to include a distance finding method
+google.maps.LatLng.prototype.distanceTo=
+/** 
+ * This distance formula is adapted slightly for google's object model from Chris Veness' code under 
+ * the following copyright, license details available at the included url:
+ */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+/*  Latitude/longitude spherical geodesy formulae & scripts (c) Chris Veness 2002-2010            */
+/*   - www.movable-type.co.uk/scripts/latlong.html                                                */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+/**
+ * Returns the distance from this point to the supplied point, in meters 
+ * (using Haversine formula)
+ *
+ * from: Haversine formula - R. W. Sinnott, "Virtues of the Haversine",
+ *       Sky and Telescope, vol 68, no 2, 1984
+ *
+ * @param   {LatLon} point: Latitude/longitude of destination point
+ * @param   {Number} [precision=4]: no of significant digits to use for returned value
+ * @returns {Number} Distance in meters between this point and destination point
+ */
+function(point, precision) {
+  // default 4 sig fig reflects typical 0.3% accuracy of spherical model
+  if (typeof precision == 'undefined') precision = 4;  
+  
+  var R = 6371;
+  var toRadians=function(deg){return Math.PI*deg/180};
+  var lat1 = toRadians(this.lat()), lon1 = toRadians(this.lng());
+  var lat2 = toRadians(point.lat()), lon2 = toRadians(point.lng());
+  var dLat = lat2 - lat1;
+  var dLon = lon2 - lon1;
+
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1) * Math.cos(lat2) * 
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  var d = R * c * 1000;
+  return d.toFixed(precision);
+}
