@@ -53,7 +53,7 @@ pictorical={
 				var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
 				var startOptions=
 								{
-									zoom: 15,
+									zoom: 3,
 									center: HardenaRestaurant,
 									mapTypeId: google.maps.MapTypeId.ROADMAP
 								}
@@ -74,7 +74,7 @@ pictorical={
 			  	  fillOpacity: 0.3,
 			  	  strokeColor: "#FF0000",
 			  	  strokeOpacity: 0.8,
-			  	  strokeWeight: 1
+			  	  strokeWeight: 3
 			  });
 			};
 			var deleteCircle=function(){
@@ -183,6 +183,7 @@ pictorical={
 					this.getOwnerName=function(){return rawPhoto.ownername;};
 					this.getTitle=function(){return rawPhoto.title};
 					this.getLicenseSnippet=function(){return licenses[rawPhoto.license];};
+					this.getApiCredit=function(){return ""};
 					this.getRaw=function(){return JSON.stringify(rawPhoto);};
 				}
 			},
@@ -304,7 +305,12 @@ pictorical={
 					this.getOwnerName=function(){return rawPhoto.owner_name;};
 					this.getTitle=function(){return rawPhoto.photo_title;};
 					this.getLicenseSnippet=function(){return "";};
-					this.getApiCredit=function(){return "";};
+					this.getApiCredit=function(){
+						return '<a target="_top" href="http://www.panoramio.com">'+
+						'<img width="67" height="14" src="http://www.panoramio.com/img/logo-tos.png">'+
+						'</a>'+
+						'<span>Photos are copyrighted by their owners</span>';
+					};
 					this.getRaw=function(){return JSON.stringify(rawPhoto);};
 				}
 		},
@@ -330,14 +336,15 @@ pictorical={
 			   };
 			var $photoList=$("#slideshow ul");
 			var loadPhoto=function(photo){
-				$photoList.append('<li><label>'+photo.getDate().toLocaleDateString()+'</label>'+
-						'<a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
-						photo.getLicenseSnippet()+
-				'<img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
+				$photoList.append('<li><img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
 				'<map name="p'+photo.getID()+'">'+
 				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous"/>'+
 				'<area shape="rect" class="next" coords="50,0,90,40" href="#next" title="Advance to Next Photo" alt="Next"/>'+
-				'</map></li>');
+				'</map>'+
+				'<a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
+				'<label>'+photo.getDate().toLocaleDateString()+'</label>'+
+				photo.getLicenseSnippet()+photo.getApiCredit()+
+		'</li>');
 			};
 			$("#slideshow ul.slideshow").empty();
 			//add photos to the DOM
