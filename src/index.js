@@ -53,11 +53,16 @@ pictorical={
 				var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
 				var startOptions=
 								{
-									zoom: 4,
+									zoom: 15,
 									center: HardenaRestaurant,
 									mapTypeId: google.maps.MapTypeId.ROADMAP
 								}
-				return new google.maps.Map($("#map_canvas")[0],startOptions);
+				var map = new google.maps.Map($("#map")[0],startOptions);
+				var pictoricalTitle=$('<div class="legend"><h1>Pictorical</h1> <p>Browse the map, then click to choose a slideshow area.</p></div>')[0];
+				var terms=$($.trim($('footer').html()))[0];
+				map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
+				map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
+				return map;
 			}
 			var drawCircleAt=function(location) {
 			  var clickedLocation = new google.maps.LatLng(location);
@@ -160,111 +165,151 @@ pictorical={
 			};
 		},
 		
-		requestPanoramioPhotos: function(selectedCircle,photosFoundCallback){
-			var bounds=selectedCircle.getBounds();
-			var ne=bounds.getNorthEast();
-			var sw=bounds.getSouthWest();
-			/**
-			 * Turns out they don't really mean min and max, they mean westernmost & 
-			 * easternmost / northernmost & southernmost - tested on the international dateline.
-			 * This method still seems to work on the south pole, though I don't think 
-			 * I quite comprehend why. Is this wrong, and do you care? If so, let me 
-			 * know. -Patrick Boe
-			 */
-			$.getJSON("http://www.panoramio.com/map/get_panoramas.php?callback=?",
-					{
-						set:"public",
-						from:0,
-						to:50,
-						minx:sw.lng(),
-						miny:sw.lat(),
-						maxx:ne.lng(),
-						maxy:ne.lat(),
-						size:"medium"
-					},
-					function(data){
+		flickr : {
+			parseDate: function (flickrDate){
+				var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
+				var dateParts=dateOnly.split("-");
+				return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
+			},
+			
+			PhotoFactory: function(licenses){
+				return function(rawPhoto){
+					var _date=pictorical.flickr.parseDate(rawPhoto.datetaken);
+					this.getID=function(){return "flickr"+String(rawPhoto.id);};
+					this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
+					this.getDate=function(){return _date;};
+					this.getPage=function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id};
+					this.getOwnerUrl=function(){return "http://www.flickr.com/people/" + rawPhoto.owner;};
+					this.getOwnerName=function(){return rawPhoto.ownername;};
+					this.getTitle=function(){return rawPhoto.title};
+					this.getLicenseSnippet=function(){return licenses[rawPhoto.license];};
+					this.getRaw=function(){return JSON.stringify(rawPhoto);};
+				}
+			},
+			makeLicenseSnippet: function(license){
+				var snippet="";
+				if(license.url.search('creativecommons.org')>=0){
+					var type=license.url.match(/\/licenses\/(.*\/)/)[1];
+					snippet='<a rel="license" href="'+license.url+'" title="'+license.name+'">'+
+						'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'80x15.png"/></a>'
+				} 
+				snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
+				return snippet;
+			},
+			
+			createSource: function()
+			{
+				var apiUrl="http://api.flickr.com/services/rest/?jsoncallback=?";
+				var apiKey='5c047b2b54845211d9662958d1cc5b9d';
+				var licenses=[];
+				var licensesLoaded=function(){};
+				var photosLoaded=function(photosFoundCallback){
+					var processPhotos=function(data){
 						var photos=[];
-						if(!!data.count){
-							photos=data.photos;
+						if(licenses.length){
+							if(!!data.photos){
+								photos=data.photos.photo;
+							}
+							constructArray(photos,pictorical.flickr.PhotoFactory(licenses));
+							photosFoundCallback(photos)
+						} else{
+							//we don't have license information yet. set this to run when we do.
+							licensesLoaded=function(){
+								processPhotos(data);
+								licencesLoaded=function(){};
+							};
 						}
-						constructArray(photos,pictorical.PanoramioPhoto);
-						photosFoundCallback(photos);
-					}
-				);
-		},
-		
-
-		makeFlickrLicenseSnippet: function(license){
-			var snippet="";
-			if(license.url.search('creativecommons.org')>=0){
-				var type=license.url.match(/\/licenses\/([^\/]*)/)[1];
-				snippet='<a rel="license" href="'+license.url+'" title="'+license.name+'">'+
-					'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'/2.0/80x15.png"/></a>'
-			} 
-			snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
-			return snippet;
-		},
-		
-		createFlickrSource: function()
-		{
-			var apiUrl="http://api.flickr.com/services/rest/?jsoncallback=?";
-			var apiKey='5c047b2b54845211d9662958d1cc5b9d';
-			var licenses=[];
-			var licensesLoaded=function(){};
-			var photosLoaded=function(photosFoundCallback){
-				var processPhotos=function(data){
-					var photos=[];
-					if(licenses.length){
-						if(!!data.photos){
-							photos=data.photos.photo;
-						}
-						constructArray(photos,pictorical.FlickrPhotoFactory(licenses));
-						photosFoundCallback(photos)
-					} else{
-						//we don't have license information yet. set this to run when we do.
-						licensesLoaded=function(){
-							processPhotos(data);
-							licencesLoaded=function(){};
-						};
-					}
+					};
+					return processPhotos;
 				};
-				return processPhotos;
-			};
-			$.getJSON(apiUrl,
-					{
-						method: 'flickr.photos.licenses.getInfo',
-						format: 'json',
-						api_key: apiKey,
-					},
-					function(data){
-						if(!!data.licenses.license){
-							licenses=data.licenses.license;
-							licenses.sort(function(a,b){
-								return a.id>b.id
-							});
-							for (var i in licenses) licenses[i]=pictorical.makeFlickrLicenseSnippet(licenses[i]);
-							licensesLoaded();
-						}
-					});
-			return function(selectedCircle, photosFoundCallback){
 				$.getJSON(apiUrl,
-					{
-							method: 'flickr.photos.search',
+						{
+							method: 'flickr.photos.licenses.getInfo',
 							format: 'json',
 							api_key: apiKey,
-							lat: String(selectedCircle.getCenter().lat()),
-							lon: String(selectedCircle.getCenter().lng()),
-							radius: String(selectedCircle.getRadius()/1000.0),
-							min_upload_date: '2003-12-31 00:00:00',
-							license: '1,2,3,4,5,6,7,8',
-							sort: 'interestingness-desc',
-							extras: 'license,date_taken,owner_name',
-							per_page: 50
-					},
-					photosLoaded(photosFoundCallback)
-				);
-			};
+						},
+						function(data){
+							if(!!data.licenses.license){
+								licenses=data.licenses.license;
+								licenses.sort(function(a,b){
+									return a.id>b.id
+								});
+								for (var i in licenses) licenses[i]=pictorical.flickr.makeLicenseSnippet(licenses[i]);
+								licensesLoaded();
+							}
+						});
+				return function(selectedCircle, photosFoundCallback){
+					$.getJSON(apiUrl,
+						{
+								method: 'flickr.photos.search',
+								format: 'json',
+								api_key: apiKey,
+								lat: String(selectedCircle.getCenter().lat()),
+								lon: String(selectedCircle.getCenter().lng()),
+								radius: String(selectedCircle.getRadius()/1000.0),
+								min_upload_date: '2003-12-31 00:00:00',
+								license: '1,2,3,4,5,6,7,8',
+								sort: 'interestingness-desc',
+								extras: 'license,date_taken,owner_name',
+								per_page: 30 //flickr's terms of service specifies a max of 30 per page
+						},
+						photosLoaded(photosFoundCallback)
+					);
+				};
+			}
 		},
+		
+		panoramio:{
+			
+			requestPhotos: function(selectedCircle,photosFoundCallback){
+				var bounds=selectedCircle.getBounds();
+				var ne=bounds.getNorthEast();
+				var sw=bounds.getSouthWest();
+				/**
+				 * Turns out they don't really mean min and max, they mean westernmost & 
+				 * easternmost / northernmost & southernmost - tested on the international dateline.
+				 * This method still seems to work on the south pole, though I don't think 
+				 * I quite comprehend why. Is this wrong, and do you care? If so, let me 
+				 * know. -Patrick Boe
+				 */
+				$.getJSON("http://www.panoramio.com/map/get_panoramas.php?callback=?",
+						{
+							set:"public",
+							from:0,
+							to:29,
+							minx:sw.lng(),
+							miny:sw.lat(),
+							maxx:ne.lng(),
+							maxy:ne.lat(),
+							size:"medium"
+						},
+						function(data){
+							var photos=[];
+							if(!!data.count){
+								photos=data.photos;
+							}
+							constructArray(photos,pictorical.panoramio.Photo);
+							photosFoundCallback(photos);
+						}
+					);
+			},
+			
+			Photo:
+				function(rawPhoto){
+					this.getID=function(){return "pano"+String(rawPhoto.photo_id);}
+					this.getUrl=function(){return rawPhoto.photo_file_url;};
+					this.getDate=function(){return new Date(rawPhoto.upload_date);};
+					this.getPage=function(){return rawPhoto.photo_url;};
+					this.getOwnerUrl=function(){return rawPhoto.owner_url;};
+					this.getOwnerName=function(){return rawPhoto.owner_name;};
+					this.getTitle=function(){return rawPhoto.photo_title;};
+					this.getLicenseSnippet=function(){return "";};
+					this.getApiCredit=function(){return "";};
+					this.getRaw=function(){return JSON.stringify(rawPhoto);};
+				}
+		},
+		
+		
 		
 		loadSlides: function(photos){
 			var adjustImageMap=function(){
@@ -301,11 +346,11 @@ pictorical={
 			}
 			//set the images to cycle once the first one loads
 			$("#slideshow img.slide:first").load(function(){
-				$("#map_canvas").hide();
+				$("#map").hide();
 				$("#slideshow").show()
 					.find("ul.slideshow")
 						.cycle({
-						   timeout: 0,
+						   timeout: 4000,
 						   prev:   '.prev', 
 						   next:   '.next',
 						   after:	adjustImageMap
@@ -316,44 +361,12 @@ pictorical={
 		
 		showMap: function(){
 			$("#slideshow").hide();
-			$("#map_canvas").show();
+			$("#map").show();
 		},
 		
 		showSlides: function(){
-			$("#map_canvas").hide();
+			$("#map").hide();
 			$("#slideshow").show();
-		},
-		
-		PanoramioPhoto: function(rawPhoto){
-			this.getID=function(){return "pano"+String(rawPhoto.photo_id);}
-			this.getUrl=function(){return rawPhoto.photo_file_url;};
-			this.getDate=function(){return new Date(rawPhoto.upload_date);};
-			this.getPage=function(){return rawPhoto.photo_url;};
-			this.getOwnerUrl=function(){return rawPhoto.owner_url;};
-			this.getOwnerName=function(){return rawPhoto.owner_name;};
-			this.getTitle=function(){return rawPhoto.photo_title;};
-			this.getLicenseSnippet=function(){return "";};
-			this.getRaw=function(){return JSON.stringify(rawPhoto);};
-		},
-		
-		FlickrPhotoFactory: function(licenses){
-			return function(rawPhoto){
-				function parseFlickrDate(flickrDate){
-					var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
-					var dateParts=dateOnly.split("-");
-					return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
-				}
-				var _date=parseFlickrDate(rawPhoto.datetaken);
-				this.getID=function(){return "flickr"+String(rawPhoto.id);};
-				this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
-				this.getDate=function(){return _date;};
-				this.getPage=function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id};
-				this.getOwnerUrl=function(){return "http://www.flickr.com/people/" + rawPhoto.owner;};
-				this.getOwnerName=function(){return rawPhoto.ownername;};
-				this.getTitle=function(){return rawPhoto.title};
-				this.getLicenseSnippet=function(){return licenses[rawPhoto.license];};
-				this.getRaw=function(){return JSON.stringify(rawPhoto);};
-			}
 		}
 }
 
@@ -374,6 +387,6 @@ $(function(){
 	if("hash" in window.location && window.location.hash.length){
 		window.location="";
 	}
-	var displayAreaPhotos=pictorical.createPhotoDisplay([pictorical.createFlickrSource(),pictorical.requestPanoramioPhotos]);
+	var displayAreaPhotos=pictorical.createPhotoDisplay([pictorical.flickr.createSource(),pictorical.panoramio.requestPhotos]);
 	pictorical.loadMap(displayAreaPhotos);
 });

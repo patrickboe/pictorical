@@ -1,16 +1,6 @@
-add attribution, license info, link back, source logo
 research/come up with/support a versioning scheme
+publish a privacy policy
 show a loading dialog during search
-back button support from slideshow
 adjust image map on window resize
 add a "go to" control
-
-flickr attributes:
-license(number)
-ownername(string)
-
-panoramio attributes: 
-owner_name
-owner_url
-owner_id
-photo_url
+create mechanism for automated removal of images upon owner request

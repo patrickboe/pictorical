@@ -12,3 +12,7 @@ handlers:
   expiration: "365d"
   upload: .*\.(css|js)
   static_files: \1
+ 
+- url: /([^\/\.]+)\/?
+  upload: .*\.html
+  static_files: \1.html
