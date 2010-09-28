@@ -15,93 +15,101 @@ pictorical= function(){
 		for (var i in arr) arr[i]=new constructor(arr[i]);
 	}
 	
-	var scene={
-		loadMap: function(selectionCallback) {
-			var map;
-			var circle;
-			var mapClickListener=null;
-			var updateMapClickBehavior=function(lambda){
-				mapClickListener=google.maps.event.addListener(map,"click",lambda);
-			}
-			var findDistance=function(locA,locB){
-				return Math.round(locA.distanceTo(locB));
-			};
-			var drawStartingMap=function(){
-				var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
-				var startOptions=
-								{
-									zoom: 3,
-									center: HardenaRestaurant,
-									mapTypeId: google.maps.MapTypeId.ROADMAP
-								}
-				var map = new google.maps.Map($("#map")[0],startOptions);
-				var pictoricalTitle=$('header')[0];
-				var terms=$('footer').clone()[0];
-				map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
-				map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
-				return map;
-			}
-			var drawCircleAt=function(location) {
-			  var clickedLocation = new google.maps.LatLng(location);
-			  circle = new google.maps.Circle({
-				  center: location, 
-				  map: map,
-				  radius: 50,
-				  fillColor: "#FF0000",
-			  	  fillOpacity: 0.3,
-			  	  strokeColor: "#FF0000",
-			  	  strokeOpacity: 0.8,
-			  	  strokeWeight: 3
-			  });
-			};
-			var deleteCircle=function(){
-				circle.setMap(null);
-				circle=null;
-			};
-			var acceptSelections=function(){
-				updateMapClickBehavior(function(event){
-					drawCircleAt(event.latLng);
-					google.maps.event.removeListener(mapClickListener);
-					$("#map p.hints").text("Move your mouse to size the circle, then click again.");
-					acceptChanges();
-				});
-			};
-			var acceptChanges=function(){
-				var finalizeSelection=function(event){
-					google.maps.event.removeListener(mapMoveListener);
-					google.maps.event.removeListener(mapClickListener);
-					google.maps.event.removeListener(doneOnCircleListener);
-					window.location.hash="#map_selection";
-					selectionCallback(circle);
-					$("#map p.hints").text("Loading a slideshow. Click off the circle to cancel.");
-					map.setCenter(circle.getCenter());
-					map.fitBounds(circle.getBounds());
-					acceptCancellations();
+	var scene=function($map){
+		return {
+			loadMap: function(selectionCallback) {
+				var map;
+				var circle;
+				var mapClickListener=null;
+				var updateMapClickBehavior=function(lambda){
+					mapClickListener=google.maps.event.addListener(map,"click",lambda);
+				}
+				var findDistance=function(locA,locB){
+					return Math.round(locA.distanceTo(locB));
 				};
-				var doneOnCircleListener=google.maps.event.addListener(circle,"mousedown",finalizeSelection);
-				var mapMoveListener=google.maps.event.addListener(map,"mousemove",function(event){
-					circle.setRadius(findDistance(circle.getCenter(), event.latLng));
-				});
-				updateMapClickBehavior(finalizeSelection);
-			};
-			var acceptCancellations=function(){
-				var cancelSelection=function(event){
-					deleteCircle();
-					google.maps.event.removeListener(mapClickListener);
-					$("#map p.hints").text("You can choose another circle if you want.");
-					acceptSelections();
+				var drawStartingMap=function(){
+					var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
+					var startOptions=
+									{
+										zoom: 15,
+										center: HardenaRestaurant,
+										mapTypeId: google.maps.MapTypeId.ROADMAP
+									}
+					var map = new google.maps.Map($map[0],startOptions);
+					var pictoricalTitle=$('header')[0];
+					var terms=$('footer').clone()[0];
+					map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
+					map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
+					return map;
+				}
+				var drawCircleAt=function(location) {
+				  var clickedLocation = new google.maps.LatLng(location);
+				  circle = new google.maps.Circle({
+					  center: location, 
+					  map: map,
+					  radius: 50,
+					  fillColor: "#FF0000",
+				  	  fillOpacity: 0.3,
+				  	  strokeColor: "#FF0000",
+				  	  strokeOpacity: 0.8,
+				  	  strokeWeight: 3
+				  });
 				};
-				updateMapClickBehavior(cancelSelection);
-			};
-			
-			map=drawStartingMap();
-			acceptSelections();
-		}
-	}; 
+				var deleteCircle=function(){
+					circle.setMap(null);
+					circle=null;
+				};
+				var acceptSelections=function(){
+					updateMapClickBehavior(function(event){
+						drawCircleAt(event.latLng);
+						google.maps.event.removeListener(mapClickListener);
+						displayHint("Move your mouse to size the circle, then click again.");
+						acceptChanges();
+					});
+				};
+				var acceptChanges=function(){
+					var finalizeSelection=function(event){
+						google.maps.event.removeListener(mapMoveListener);
+						google.maps.event.removeListener(mapClickListener);
+						google.maps.event.removeListener(doneOnCircleListener);
+						window.location.hash="#map_selection";
+						selectionCallback(circle);
+						displayHint("Loading a slideshow. Click off the circle to cancel.",true);
+						map.setCenter(circle.getCenter());
+						map.fitBounds(circle.getBounds());
+						acceptCancellations();
+					};
+					var doneOnCircleListener=google.maps.event.addListener(circle,"mousedown",finalizeSelection);
+					var mapMoveListener=google.maps.event.addListener(map,"mousemove",function(event){
+						circle.setRadius(findDistance(circle.getCenter(), event.latLng));
+					});
+					updateMapClickBehavior(finalizeSelection);
+				};
+				var acceptCancellations=function(){
+					var cancelSelection=function(event){
+						deleteCircle();
+						google.maps.event.removeListener(mapClickListener);
+						displayHint("You can choose another circle if you want.");
+						acceptSelections();
+					};
+					updateMapClickBehavior(cancelSelection);
+				};
+				
+				map=drawStartingMap();
+				acceptSelections();
+			}
+		};
+	}($('#map')); 
+	
+	var displayHint=function(hint,isLoading){
+		var $hints=$("#map p.hints");
+		$hints.toggleClass('loading',!!isLoading);
+		$hints.text(hint);
+	};
 	
 	var onSlideshowLoad=function(){
 		pictorical.showSlides()
-		$("#map p.hints").text("Click off the circle to cancel.");
+		displayHint("Click off the circle to cancel.");
 		window.location.hash="#slideshow";
 	};
 

@@ -58,6 +58,7 @@ body { height: 100%; margin: 0px; padding: 0px }
 #map header, #map footer {background-color: white; padding: 5px}
 #map footer {font-size: .7em}
 #map header h1, #map header p, #map header {display: inline}
+#map .hints.loading {color: red}
 #slideshow header h1 {font-size: 3em}
 #slideshow { display:none; height:100%; padding: 0px 50px }
 #slideshow ul, #slideshow li {height:100%}
