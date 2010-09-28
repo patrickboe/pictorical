@@ -98,88 +98,144 @@ pictorical= function(){
 			acceptSelections();
 		}
 	}; 
+	
+	var onSlideshowLoad=function(){
+		pictorical.showSlides()
+		$("#map p.hints").text("Click off the circle to cancel.");
+		window.location.hash="#slideshow";
+	};
 
-	var slideshow={
-		createPhotoDisplay: function(sources){
-			return function(selectedCircle){
-				var requestsMade=0;
-				var responsesReceived=0;
-				var allPhotos=[];
-				var timeoutID;
-				var displayAllPhotos=function(){
-					allPhotos.sort(function(a,b){
-						if(a.getDate() > b.getDate()) return 1;
-						return -1;
-					});
-					slideshow.loadSlides(allPhotos);
-				};
-				var makeRequest=function(requestFunction){
-					requestsMade++;
-					requestFunction(selectedCircle,acceptPhotos);
-				};
-				var cancelTimeout=function(){
-					window.clearTimeout(timeoutID);
-					timeoutID=null;
-				};
-				var acceptPhotos=function(photos){
-					responsesReceived++;
-					if(!!timeoutID){
-						if(selectedCircle.getMap()!=null){
-							allPhotos=allPhotos.concat(photos);
-							if(responsesReceived==requestsMade){
+	var slideshow=function($slides,onload){
+		var loadSlides=function(photos){
+			var adjustImageMap=function(){
+				   //set up img map areas for current photo
+				   var $this=$(this);
+				   var img=$this.find("img.slide")[0];
+				   var areaW=Math.round(img.clientWidth/2)-5
+				   var prevRightEdge=String(areaW);
+				   var nextLeftEdge=String(areaW+10);
+				   var w=String(img.clientWidth);
+				   var h=String(img.clientHeight);
+				   $this
+				   	.find("area.prev")
+				   		.attr("coords","0,0,"+prevRightEdge+","+h)
+				   	.end()
+				   	.find("area.next")
+			   			.attr("coords", nextLeftEdge+",0,"+w+","+h)
+			   };
+			var loadPhoto=function(photo){
+				$slides.append('<li><img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
+				'<map name="p'+photo.getID()+'">'+
+				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous"/>'+
+				'<area shape="rect" class="next" coords="50,0,90,40" href="#next" title="Advance to Next Photo" alt="Next"/>'+
+				'</map>'+
+				'<a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
+				'<label>'+photo.getDate().toLocaleDateString()+'</label>'+
+				photo.getLicenseSnippet()+photo.getApiCredit()+
+		'</li>');
+			};
+			$slides.empty();
+			//add photos to the DOM
+			for(var i in photos){
+				loadPhoto(photos[i]);
+			}
+			//set the images to cycle once the first one loads
+			$slides.find("img.slide:first").load(function(){
+				onload();
+				$slides.cycle({
+					   timeout: 4000,
+					   prev:   '.prev', 
+					   next:   '.next',
+					   after:	adjustImageMap
+				});
+			});
+		};
+		
+		return {
+			createPhotoDisplay: function(sources){
+				return function(selectedCircle){
+					var requestsMade=0;
+					var responsesReceived=0;
+					var allPhotos=[];
+					var timeoutID;
+					var displayAllPhotos=function(){
+						allPhotos.sort(function(a,b){
+							if(a.getDate() > b.getDate()) return 1;
+							return -1;
+						});
+						loadSlides(allPhotos);
+					};
+					var makeRequest=function(requestFunction){
+						requestsMade++;
+						requestFunction(selectedCircle,acceptPhotos);
+					};
+					var cancelTimeout=function(){
+						window.clearTimeout(timeoutID);
+						timeoutID=null;
+					};
+					var acceptPhotos=function(photos){
+						responsesReceived++;
+						if(!!timeoutID){
+							if(selectedCircle.getMap()!=null){
+								allPhotos=allPhotos.concat(photos);
+								if(responsesReceived==requestsMade){
+									cancelTimeout();
+									displayAllPhotos();
+								}
+							} else {
 								cancelTimeout();
-								displayAllPhotos();
 							}
-						} else {
-							cancelTimeout();
 						}
 					}
-				}
-				for(var i in sources){
-					makeRequest(sources[i]);
-				}
-				timeoutID=window.setTimeout(function(){
-					if(selectedCircle.getMap()!=null){
-						displayAllPhotos();
+					for(var i in sources){
+						makeRequest(sources[i]);
 					}
-					timeoutID=null;
-				},5000);
-			};
-		},
+					timeoutID=window.setTimeout(function(){
+						if(selectedCircle.getMap()!=null){
+							displayAllPhotos();
+						}
+						timeoutID=null;
+					},5000);
+				};
+			}
+		};
+	}($('#slideshow ul.slideshow'), onSlideshowLoad);
+	
+	var flickr = function(){
+		var parseDate= function (flickrDate){
+			var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
+			var dateParts=dateOnly.split("-");
+			return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
+		};
 		
-		flickr : {
-			parseDate: function (flickrDate){
-				var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
-				var dateParts=dateOnly.split("-");
-				return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
-			},
-			
-			PhotoFactory: function(licenses){
-				return function(rawPhoto){
-					var _date=slideshow.flickr.parseDate(rawPhoto.datetaken);
-					this.getID=function(){return "flickr"+String(rawPhoto.id);};
-					this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
-					this.getDate=function(){return _date;};
-					this.getPage=function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id};
-					this.getOwnerUrl=function(){return "http://www.flickr.com/people/" + rawPhoto.owner;};
-					this.getOwnerName=function(){return rawPhoto.ownername;};
-					this.getTitle=function(){return rawPhoto.title};
-					this.getLicenseSnippet=function(){return licenses[rawPhoto.license];};
-					this.getApiCredit=function(){return ""};
-					this.getRaw=function(){return JSON.stringify(rawPhoto);};
-				}
-			},
-			makeLicenseSnippet: function(license){
-				var snippet="";
-				if(license.url.search('creativecommons.org')>=0){
-					var type=license.url.match(/\/licenses\/(.*\/)/)[1];
-					snippet='<a rel="license" href="'+license.url+'" title="'+license.name+'">'+
-						'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'80x15.png"/></a>'
-				} 
-				snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
-				return snippet;
-			},
-			
+		var PhotoFactory= function(licenses){
+			return function(rawPhoto){
+				var _date=parseDate(rawPhoto.datetaken);
+				this.getID=function(){return "flickr"+String(rawPhoto.id);};
+				this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
+				this.getDate=function(){return _date;};
+				this.getPage=function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id};
+				this.getOwnerUrl=function(){return "http://www.flickr.com/people/" + rawPhoto.owner;};
+				this.getOwnerName=function(){return rawPhoto.ownername;};
+				this.getTitle=function(){return rawPhoto.title};
+				this.getLicenseSnippet=function(){return licenses[rawPhoto.license];};
+				this.getApiCredit=function(){return ""};
+				this.getRaw=function(){return JSON.stringify(rawPhoto);};
+			}
+		};
+		
+		var makeLicenseSnippet= function(license){
+			var snippet="";
+			if(license.url.search('creativecommons.org')>=0){
+				var type=license.url.match(/\/licenses\/(.*\/)/)[1];
+				snippet='<a rel="license" href="'+license.url+'" title="'+license.name+'">'+
+					'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'80x15.png"/></a>'
+			} 
+			snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
+			return snippet;
+		};
+		
+		return {
 			createSource: function()
 			{
 				var apiUrl="http://api.flickr.com/services/rest/?jsoncallback=?";
@@ -193,7 +249,7 @@ pictorical= function(){
 							if(!!data.photos){
 								photos=data.photos.photo;
 							}
-							constructArray(photos,slideshow.flickr.PhotoFactory(licenses));
+							constructArray(photos,PhotoFactory(licenses));
 							photosFoundCallback(photos)
 						} else{
 							//we don't have license information yet. set this to run when we do.
@@ -217,7 +273,7 @@ pictorical= function(){
 								licenses.sort(function(a,b){
 									return a.id>b.id
 								});
-								for (var i in licenses) licenses[i]=slideshow.flickr.makeLicenseSnippet(licenses[i]);
+								for (var i in licenses) licenses[i]=makeLicenseSnippet(licenses[i]);
 								licensesLoaded();
 							}
 						});
@@ -240,10 +296,29 @@ pictorical= function(){
 					);
 				};
 			}
-		},
-		
-		panoramio:{
-			
+		};
+	}();
+	
+	var panoramio= function(){
+		var Photo=
+			function(rawPhoto){
+				this.getID=function(){return "pano"+String(rawPhoto.photo_id);}
+				this.getUrl=function(){return rawPhoto.photo_file_url;};
+				this.getDate=function(){return new Date(rawPhoto.upload_date);};
+				this.getPage=function(){return rawPhoto.photo_url;};
+				this.getOwnerUrl=function(){return rawPhoto.owner_url;};
+				this.getOwnerName=function(){return rawPhoto.owner_name;};
+				this.getTitle=function(){return rawPhoto.photo_title;};
+				this.getLicenseSnippet=function(){return "";};
+				this.getApiCredit=function(){
+					return '<a target="_top" href="http://www.panoramio.com">'+
+					'<img width="67" height="14" src="http://www.panoramio.com/img/logo-tos.png">'+
+					'</a>'+
+					'<span>Photos are copyrighted by their owners</span>';
+				};
+				this.getRaw=function(){return JSON.stringify(rawPhoto);};
+			};
+		return {
 			requestPhotos: function(selectedCircle,photosFoundCallback){
 				var bounds=selectedCircle.getBounds();
 				var ne=bounds.getNorthEast();
@@ -271,105 +346,34 @@ pictorical= function(){
 							if(!!data.count){
 								photos=data.photos;
 							}
-							constructArray(photos,slideshow.panoramio.Photo);
+							constructArray(photos,Photo);
 							photosFoundCallback(photos);
-						}
-					);
-			},
-			
-			Photo:
-				function(rawPhoto){
-					this.getID=function(){return "pano"+String(rawPhoto.photo_id);}
-					this.getUrl=function(){return rawPhoto.photo_file_url;};
-					this.getDate=function(){return new Date(rawPhoto.upload_date);};
-					this.getPage=function(){return rawPhoto.photo_url;};
-					this.getOwnerUrl=function(){return rawPhoto.owner_url;};
-					this.getOwnerName=function(){return rawPhoto.owner_name;};
-					this.getTitle=function(){return rawPhoto.photo_title;};
-					this.getLicenseSnippet=function(){return "";};
-					this.getApiCredit=function(){
-						return '<a target="_top" href="http://www.panoramio.com">'+
-						'<img width="67" height="14" src="http://www.panoramio.com/img/logo-tos.png">'+
-						'</a>'+
-						'<span>Photos are copyrighted by their owners</span>';
-					};
-					this.getRaw=function(){return JSON.stringify(rawPhoto);};
-				}
-		},
-		
-		
-		
-		loadSlides: function(photos){
-			var adjustImageMap=function(){
-				   //set up img map areas for current photo
-				   var $this=$(this);
-				   var img=$this.find("img.slide")[0];
-				   var areaW=Math.round(img.clientWidth/2)-5
-				   var prevRightEdge=String(areaW);
-				   var nextLeftEdge=String(areaW+10);
-				   var w=String(img.clientWidth);
-				   var h=String(img.clientHeight);
-				   $this
-				   	.find("area.prev")
-				   		.attr("coords","0,0,"+prevRightEdge+","+h)
-				   	.end()
-				   	.find("area.next")
-			   			.attr("coords", nextLeftEdge+",0,"+w+","+h)
-			   };
-			var $photoList=$("#slideshow ul");
-			var loadPhoto=function(photo){
-				$photoList.append('<li><img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
-				'<map name="p'+photo.getID()+'">'+
-				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous"/>'+
-				'<area shape="rect" class="next" coords="50,0,90,40" href="#next" title="Advance to Next Photo" alt="Next"/>'+
-				'</map>'+
-				'<a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
-				'<label>'+photo.getDate().toLocaleDateString()+'</label>'+
-				photo.getLicenseSnippet()+photo.getApiCredit()+
-		'</li>');
-			};
-			$("#slideshow ul.slideshow").empty();
-			//add photos to the DOM
-			for(var i in photos){
-				loadPhoto(photos[i]);
-			}
-			//set the images to cycle once the first one loads
-			$("#slideshow img.slide:first").load(function(){
-				pictorical.$showSlides()
-					.find("ul.slideshow")
-						.cycle({
-						   timeout: 4000,
-						   prev:   '.prev', 
-						   next:   '.next',
-						   after:	adjustImageMap
 						});
-				$("#map p.hints").text("Click off the circle to cancel.");
-				window.location.hash="#slideshow";
-			});
-		}
-	};
+				}
+			};
+		}();
 	
 	return{
-		$showMap: function(){
+		showMap: function(){
 			$("#slideshow").hide();
-			return $("#map").show();
+			$("#map").show();
 		},
 		
-		$showSlides: function(){
+		showSlides: function(){
 			$("#map").hide();
-			return $("#slideshow").show();
+			$("#slideshow").show();
 		},
 		
 		load: function(){
-			var displayAreaPhotos=slideshow.createPhotoDisplay([slideshow.flickr.createSource(),slideshow.panoramio.requestPhotos]);
+			var displayAreaPhotos=slideshow.createPhotoDisplay([flickr.createSource(),panoramio.requestPhotos]);
 			scene.loadMap(displayAreaPhotos);
 		}
 	};
 }();
 
 $(window).hashchange(function(){
-	if(window.location.hash==""||window.location.hash=="#map_selection") pictorical.$showMap();
-	else pictorical.$showSlides();
+	if(window.location.hash==""||window.location.hash=="#map_selection") pictorical.showMap();
+	else pictorical.showSlides();
 });
 
 $(function(){
@@ -396,7 +400,7 @@ google.maps.LatLng.prototype.distanceTo=
  * from: Haversine formula - R. W. Sinnott, "Virtues of the Haversine",
  *       Sky and Telescope, vol 68, no 2, 1984
  *
- * @param   {LatLon} point: Latitude/longitude of destination point
+ * @param   {google.maps.LatLng} point: Latitude/longitude of destination point
  * @param   {Number} [precision=4]: no of significant digits to use for returned value
  * @returns {Number} Distance in meters between this point and destination point
  */
