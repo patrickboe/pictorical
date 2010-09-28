@@ -6,8 +6,16 @@
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.gnu.org/licenses/gpl.html
  */
+pictorical= function(){
+	var htmlEncode=function(value){ 
+	  return $('<div/>').text(value).html(); 
+	} 
 
-pictorical={
+	var constructArray = function(arr,constructor){
+		for (var i in arr) arr[i]=new constructor(arr[i]);
+	}
+	
+	var scene={
 		loadMap: function(selectionCallback) {
 			var map;
 			var circle;
@@ -54,6 +62,7 @@ pictorical={
 				updateMapClickBehavior(function(event){
 					drawCircleAt(event.latLng);
 					google.maps.event.removeListener(mapClickListener);
+					$("#map p.hints").text("Move your mouse to size the circle, then click again.");
 					acceptChanges();
 				});
 			};
@@ -64,6 +73,7 @@ pictorical={
 					google.maps.event.removeListener(doneOnCircleListener);
 					window.location.hash="#map_selection";
 					selectionCallback(circle);
+					$("#map p.hints").text("Loading a slideshow. Click off the circle to cancel.");
 					map.setCenter(circle.getCenter());
 					map.fitBounds(circle.getBounds());
 					acceptCancellations();
@@ -78,6 +88,7 @@ pictorical={
 				var cancelSelection=function(event){
 					deleteCircle();
 					google.maps.event.removeListener(mapClickListener);
+					$("#map p.hints").text("You can choose another circle if you want.");
 					acceptSelections();
 				};
 				updateMapClickBehavior(cancelSelection);
@@ -85,8 +96,10 @@ pictorical={
 			
 			map=drawStartingMap();
 			acceptSelections();
-		},
-		
+		}
+	}; 
+
+	var slideshow={
 		createPhotoDisplay: function(sources){
 			return function(selectedCircle){
 				var requestsMade=0;
@@ -98,7 +111,7 @@ pictorical={
 						if(a.getDate() > b.getDate()) return 1;
 						return -1;
 					});
-					pictorical.loadSlides(allPhotos);
+					slideshow.loadSlides(allPhotos);
 				};
 				var makeRequest=function(requestFunction){
 					requestsMade++;
@@ -143,7 +156,7 @@ pictorical={
 			
 			PhotoFactory: function(licenses){
 				return function(rawPhoto){
-					var _date=pictorical.flickr.parseDate(rawPhoto.datetaken);
+					var _date=slideshow.flickr.parseDate(rawPhoto.datetaken);
 					this.getID=function(){return "flickr"+String(rawPhoto.id);};
 					this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
 					this.getDate=function(){return _date;};
@@ -180,7 +193,7 @@ pictorical={
 							if(!!data.photos){
 								photos=data.photos.photo;
 							}
-							constructArray(photos,pictorical.flickr.PhotoFactory(licenses));
+							constructArray(photos,slideshow.flickr.PhotoFactory(licenses));
 							photosFoundCallback(photos)
 						} else{
 							//we don't have license information yet. set this to run when we do.
@@ -204,7 +217,7 @@ pictorical={
 								licenses.sort(function(a,b){
 									return a.id>b.id
 								});
-								for (var i in licenses) licenses[i]=pictorical.flickr.makeLicenseSnippet(licenses[i]);
+								for (var i in licenses) licenses[i]=slideshow.flickr.makeLicenseSnippet(licenses[i]);
 								licensesLoaded();
 							}
 						});
@@ -258,7 +271,7 @@ pictorical={
 							if(!!data.count){
 								photos=data.photos;
 							}
-							constructArray(photos,pictorical.panoramio.Photo);
+							constructArray(photos,slideshow.panoramio.Photo);
 							photosFoundCallback(photos);
 						}
 					);
@@ -322,8 +335,7 @@ pictorical={
 			}
 			//set the images to cycle once the first one loads
 			$("#slideshow img.slide:first").load(function(){
-				$("#map").hide();
-				$("#slideshow").show()
+				pictorical.$showSlides()
 					.find("ul.slideshow")
 						.cycle({
 						   timeout: 4000,
@@ -331,40 +343,40 @@ pictorical={
 						   next:   '.next',
 						   after:	adjustImageMap
 						});
+				$("#map p.hints").text("Click off the circle to cancel.");
 				window.location.hash="#slideshow";
 			});
-		},
-		
-		showMap: function(){
-			$("#slideshow").hide();
-			$("#map").show();
-		},
-		
-		showSlides: function(){
-			$("#map").hide();
-			$("#slideshow").show();
 		}
-}
-
-function htmlEncode(value){ 
-  return $('<div/>').text(value).html(); 
-} 
-
-function constructArray(arr,constructor){
-	for (var i in arr) arr[i]=new constructor(arr[i]);
-}
+	};
+	
+	return{
+		$showMap: function(){
+			$("#slideshow").hide();
+			return $("#map").show();
+		},
+		
+		$showSlides: function(){
+			$("#map").hide();
+			return $("#slideshow").show();
+		},
+		
+		load: function(){
+			var displayAreaPhotos=slideshow.createPhotoDisplay([slideshow.flickr.createSource(),slideshow.panoramio.requestPhotos]);
+			scene.loadMap(displayAreaPhotos);
+		}
+	};
+}();
 
 $(window).hashchange(function(){
-	if(window.location.hash==""||window.location.hash=="#map_selection") pictorical.showMap();
-	else pictorical.showSlides();
+	if(window.location.hash==""||window.location.hash=="#map_selection") pictorical.$showMap();
+	else pictorical.$showSlides();
 });
 
 $(function(){
 	if("hash" in window.location && window.location.hash.length){
 		window.location="";
 	}
-	var displayAreaPhotos=pictorical.createPhotoDisplay([pictorical.flickr.createSource(),pictorical.panoramio.requestPhotos]);
-	pictorical.loadMap(displayAreaPhotos);
+	pictorical.load();
 });
 
 //extend google's LatLng to include a distance finding method
