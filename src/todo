@@ -1,10 +1,8 @@
 research/come up with/support a versioning scheme
 show a loading dialog during search
 adjust image map on window resize
-fix null reference bug in slideshow
 better slideshow layout
 add a "go to" control
-next and previous links no longer work
 put a dot or flag at the center of new circle?
 create mechanism for automated removal of images upon owner request
 develop p3p privacy header

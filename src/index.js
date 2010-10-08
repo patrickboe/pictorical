@@ -19,7 +19,7 @@ pictorical= function(){
 		var map;
 		var circle;
 		var mapClickListener=null;
-		
+
 		var displayHint=function(hint,isLoading){
 			var $hints=$map.find("p.hints");
 			$hints.toggleClass('loading',!!isLoading);
@@ -64,6 +64,11 @@ pictorical= function(){
 			circle.setMap(null);
 			circle=null;
 		};
+		var cancelSelection=function(event){
+			deleteCircle();
+			google.maps.event.removeListener(mapClickListener);
+			acceptSelections();
+		};
 		var acceptSelections=function(){
 			updateMapClickBehavior(function(event){
 				drawCircleAt(event.latLng);
@@ -72,13 +77,21 @@ pictorical= function(){
 				acceptChanges();
 			});
 		};
+		var onSelectionCallbackDone = function(hasResults){ 
+			if(hasResults) {
+				displayHint("Click off the circle to cancel.");
+			} else {
+				displayHint("No results found. Try a bigger circle.");
+				cancelSelection();
+			}
+		};
 		var acceptChanges=function(){
 			var finalizeSelection=function(event){
 				google.maps.event.removeListener(mapMoveListener);
 				google.maps.event.removeListener(mapClickListener);
 				google.maps.event.removeListener(doneOnCircleListener);
 				window.location.hash="#map_selection";
-				selectionCallback(circle, function(){ displayHint("Click off the circle to cancel.");});
+				selectionCallback(circle, onSelectionCallbackDone);
 				displayHint("Loading a slideshow. Click off the circle to cancel.",true);
 				acceptCancellations();
 			};
@@ -89,13 +102,10 @@ pictorical= function(){
 			updateMapClickBehavior(finalizeSelection);
 		};
 		var acceptCancellations=function(){
-			var cancelSelection=function(event){
-				deleteCircle();
-				google.maps.event.removeListener(mapClickListener);
+			updateMapClickBehavior(function(){
 				displayHint("You can choose another circle if you want.");
-				acceptSelections();
-			};
-			updateMapClickBehavior(cancelSelection);
+				cancelSelection();
+			});
 		};
 		
 		map=drawStartingMap();
@@ -131,6 +141,10 @@ pictorical= function(){
 				photo.getLicenseSnippet()+photo.getApiCredit()+
 		'</li>');
 			};
+			if(!photos.length){
+				onload(false);
+				return;
+			}
 			$slides.empty();
 			//add photos to the DOM
 			for(var i in photos){
@@ -138,7 +152,7 @@ pictorical= function(){
 			}
 			//set the images to cycle once the first one loads
 			$slides.find("img.slide:first").load(function(){
-				onload();
+				onload(true);
 				pictorical.showSlides()
 				window.location.hash="#slideshow";
 				$slides.cycle({
