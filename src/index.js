@@ -15,106 +15,95 @@ pictorical= function(){
 		for (var i in arr) arr[i]=new constructor(arr[i]);
 	}
 	
-	var scene=function($map){
-		return {
-			loadMap: function(selectionCallback) {
-				var map;
-				var circle;
-				var mapClickListener=null;
-				var updateMapClickBehavior=function(lambda){
-					mapClickListener=google.maps.event.addListener(map,"click",lambda);
-				}
-				var findDistance=function(locA,locB){
-					return Math.round(locA.distanceTo(locB));
-				};
-				var drawStartingMap=function(){
-					var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
-					var startOptions=
-									{
-										zoom: 15,
-										center: HardenaRestaurant,
-										mapTypeId: google.maps.MapTypeId.ROADMAP
-									}
-					var map = new google.maps.Map($map[0],startOptions);
-					var pictoricalTitle=$('header')[0];
-					var terms=$('footer').clone()[0];
-					map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
-					map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
-					return map;
-				}
-				var drawCircleAt=function(location) {
-				  var clickedLocation = new google.maps.LatLng(location);
-				  circle = new google.maps.Circle({
-					  center: location, 
-					  map: map,
-					  radius: 50,
-					  fillColor: "#FF0000",
-				  	  fillOpacity: 0.3,
-				  	  strokeColor: "#FF0000",
-				  	  strokeOpacity: 0.8,
-				  	  strokeWeight: 3
-				  });
-				};
-				var deleteCircle=function(){
-					circle.setMap(null);
-					circle=null;
-				};
-				var acceptSelections=function(){
-					updateMapClickBehavior(function(event){
-						drawCircleAt(event.latLng);
-						google.maps.event.removeListener(mapClickListener);
-						displayHint("Move your mouse to size the circle, then click again.");
-						acceptChanges();
-					});
-				};
-				var acceptChanges=function(){
-					var finalizeSelection=function(event){
-						google.maps.event.removeListener(mapMoveListener);
-						google.maps.event.removeListener(mapClickListener);
-						google.maps.event.removeListener(doneOnCircleListener);
-						window.location.hash="#map_selection";
-						selectionCallback(circle);
-						displayHint("Loading a slideshow. Click off the circle to cancel.",true);
-						map.setCenter(circle.getCenter());
-						map.fitBounds(circle.getBounds());
-						acceptCancellations();
-					};
-					var doneOnCircleListener=google.maps.event.addListener(circle,"mousedown",finalizeSelection);
-					var mapMoveListener=google.maps.event.addListener(map,"mousemove",function(event){
-						circle.setRadius(findDistance(circle.getCenter(), event.latLng));
-					});
-					updateMapClickBehavior(finalizeSelection);
-				};
-				var acceptCancellations=function(){
-					var cancelSelection=function(event){
-						deleteCircle();
-						google.maps.event.removeListener(mapClickListener);
-						displayHint("You can choose another circle if you want.");
-						acceptSelections();
-					};
-					updateMapClickBehavior(cancelSelection);
-				};
-				
-				map=drawStartingMap();
-				acceptSelections();
-			}
+	var makeScene=function($map,selectionCallback){
+		var map;
+		var circle;
+		var mapClickListener=null;
+		
+		var displayHint=function(hint,isLoading){
+			var $hints=$map.find("p.hints");
+			$hints.toggleClass('loading',!!isLoading);
+			$hints.text(hint);
 		};
-	}($('#map')); 
-	
-	var displayHint=function(hint,isLoading){
-		var $hints=$("#map p.hints");
-		$hints.toggleClass('loading',!!isLoading);
-		$hints.text(hint);
-	};
-	
-	var onSlideshowLoad=function(){
-		pictorical.showSlides()
-		displayHint("Click off the circle to cancel.");
-		window.location.hash="#slideshow";
-	};
+		
+		var updateMapClickBehavior=function(lambda){
+			mapClickListener=google.maps.event.addListener(map,"click",lambda);
+		};
+		var findDistance=function(locA,locB){
+			return Math.round(locA.distanceTo(locB));
+		};
+		var drawStartingMap=function(){
+			var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
+			var startOptions=
+							{
+								zoom: 15,
+								center: HardenaRestaurant,
+								mapTypeId: google.maps.MapTypeId.ROADMAP
+							}
+			var map = new google.maps.Map($map[0],startOptions);
+			var pictoricalTitle=$('header')[0];
+			var terms=$('footer').clone()[0];
+			map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
+			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
+			return map;
+		}
+		var drawCircleAt=function(location) {
+		  var clickedLocation = new google.maps.LatLng(location);
+		  circle = new google.maps.Circle({
+			  center: location, 
+			  map: map,
+			  radius: 50,
+			  fillColor: "#FF0000",
+		  	  fillOpacity: 0.3,
+		  	  strokeColor: "#FF0000",
+		  	  strokeOpacity: 0.8,
+		  	  strokeWeight: 3
+		  });
+		};
+		var deleteCircle=function(){
+			circle.setMap(null);
+			circle=null;
+		};
+		var acceptSelections=function(){
+			updateMapClickBehavior(function(event){
+				drawCircleAt(event.latLng);
+				google.maps.event.removeListener(mapClickListener);
+				displayHint("Move your mouse to size the circle, then click again.");
+				acceptChanges();
+			});
+		};
+		var acceptChanges=function(){
+			var finalizeSelection=function(event){
+				google.maps.event.removeListener(mapMoveListener);
+				google.maps.event.removeListener(mapClickListener);
+				google.maps.event.removeListener(doneOnCircleListener);
+				window.location.hash="#map_selection";
+				selectionCallback(circle, function(){ displayHint("Click off the circle to cancel.");});
+				displayHint("Loading a slideshow. Click off the circle to cancel.",true);
+				acceptCancellations();
+			};
+			var doneOnCircleListener=google.maps.event.addListener(circle,"mousedown",finalizeSelection);
+			var mapMoveListener=google.maps.event.addListener(map,"mousemove",function(event){
+				circle.setRadius(findDistance(circle.getCenter(), event.latLng));
+			});
+			updateMapClickBehavior(finalizeSelection);
+		};
+		var acceptCancellations=function(){
+			var cancelSelection=function(event){
+				deleteCircle();
+				google.maps.event.removeListener(mapClickListener);
+				displayHint("You can choose another circle if you want.");
+				acceptSelections();
+			};
+			updateMapClickBehavior(cancelSelection);
+		};
+		
+		map=drawStartingMap();
+		acceptSelections();
+	}; 
 
-	var slideshow=function($slides,onload){
-		var loadSlides=function(photos){
+	var slideshow=function($slides,sources){
+		var loadSlides=function(photos,onload){
 			var adjustImageMap=function(){
 				   //set up img map areas for current photo
 				   var $this=$(this);
@@ -150,6 +139,8 @@ pictorical= function(){
 			//set the images to cycle once the first one loads
 			$slides.find("img.slide:first").load(function(){
 				onload();
+				pictorical.showSlides()
+				window.location.hash="#slideshow";
 				$slides.cycle({
 					   timeout: 4000,
 					   prev:   '.prev', 
@@ -160,54 +151,52 @@ pictorical= function(){
 		};
 		
 		return {
-			createPhotoDisplay: function(sources){
-				return function(selectedCircle){
-					var requestsMade=0;
-					var responsesReceived=0;
-					var allPhotos=[];
-					var timeoutID;
-					var displayAllPhotos=function(){
-						allPhotos.sort(function(a,b){
-							if(a.getDate() > b.getDate()) return 1;
-							return -1;
-						});
-						loadSlides(allPhotos);
-					};
-					var makeRequest=function(requestFunction){
-						requestsMade++;
-						requestFunction(selectedCircle,acceptPhotos);
-					};
-					var cancelTimeout=function(){
-						window.clearTimeout(timeoutID);
-						timeoutID=null;
-					};
-					var acceptPhotos=function(photos){
-						responsesReceived++;
-						if(!!timeoutID){
-							if(selectedCircle.getMap()!=null){
-								allPhotos=allPhotos.concat(photos);
-								if(responsesReceived==requestsMade){
-									cancelTimeout();
-									displayAllPhotos();
-								}
-							} else {
-								cancelTimeout();
-							}
-						}
-					}
-					for(var i in sources){
-						makeRequest(sources[i]);
-					}
-					timeoutID=window.setTimeout(function(){
-						if(selectedCircle.getMap()!=null){
-							displayAllPhotos();
-						}
-						timeoutID=null;
-					},5000);
+			display: function(selectedCircle, onload){
+				var requestsMade=0;
+				var responsesReceived=0;
+				var allPhotos=[];
+				var timeoutID;
+				var displayAllPhotos=function(){
+					allPhotos.sort(function(a,b){
+						if(a.getDate() > b.getDate()) return 1;
+						return -1;
+					});
+					loadSlides(allPhotos,onload);
 				};
+				var makeRequest=function(requestFunction){
+					requestsMade++;
+					requestFunction(selectedCircle,acceptPhotos);
+				};
+				var cancelTimeout=function(){
+					window.clearTimeout(timeoutID);
+					timeoutID=null;
+				};
+				var acceptPhotos=function(photos){
+					responsesReceived++;
+					if(!!timeoutID){
+						if(selectedCircle.getMap()!=null){
+							allPhotos=allPhotos.concat(photos);
+							if(responsesReceived===requestsMade){
+								cancelTimeout();
+								displayAllPhotos();
+							}
+						} else {
+							cancelTimeout();
+						}
+					}
+				}
+				for(var i in sources){
+					makeRequest(sources[i]);
+				}
+				timeoutID=window.setTimeout(function(){
+					if(selectedCircle.getMap()!=null){
+						displayAllPhotos();
+					}
+					timeoutID=null;
+				},5000);
 			}
 		};
-	}($('#slideshow ul.slideshow'), onSlideshowLoad);
+	};
 	
 	var flickr = function(){
 		var parseDate= function (flickrDate){
@@ -218,17 +207,19 @@ pictorical= function(){
 		
 		var PhotoFactory= function(licenses){
 			return function(rawPhoto){
-				var _date=parseDate(rawPhoto.datetaken);
-				this.getID=function(){return "flickr"+String(rawPhoto.id);};
-				this.getUrl=function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";};
-				this.getDate=function(){return _date;};
-				this.getPage=function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id};
-				this.getOwnerUrl=function(){return "http://www.flickr.com/people/" + rawPhoto.owner;};
-				this.getOwnerName=function(){return rawPhoto.ownername;};
-				this.getTitle=function(){return rawPhoto.title};
-				this.getLicenseSnippet=function(){return licenses[rawPhoto.license];};
-				this.getApiCredit=function(){return ""};
-				this.getRaw=function(){return JSON.stringify(rawPhoto);};
+				var _date=parseDate(rawPhoto.datetaken), that={
+					getID: function(){return "flickr"+String(rawPhoto.id);},
+					getUrl: function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";},
+					getDate: function(){return _date;},
+					getPage: function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id},
+					getOwnerUrl: function(){return "http://www.flickr.com/people/" + rawPhoto.owner;},
+					getOwnerName: function(){return rawPhoto.ownername;},
+					getTitle: function(){return rawPhoto.title},
+					getLicenseSnippet: function(){return licenses[rawPhoto.license];},
+					getApiCredit: function(){return ""},
+					getRaw: function(){return JSON.stringify(rawPhoto);},
+				};
+				return that;
 			}
 		};
 		
@@ -310,21 +301,23 @@ pictorical= function(){
 	var panoramio= function(){
 		var Photo=
 			function(rawPhoto){
-				this.getID=function(){return "pano"+String(rawPhoto.photo_id);}
-				this.getUrl=function(){return rawPhoto.photo_file_url;};
-				this.getDate=function(){return new Date(rawPhoto.upload_date);};
-				this.getPage=function(){return rawPhoto.photo_url;};
-				this.getOwnerUrl=function(){return rawPhoto.owner_url;};
-				this.getOwnerName=function(){return rawPhoto.owner_name;};
-				this.getTitle=function(){return rawPhoto.photo_title;};
-				this.getLicenseSnippet=function(){return "";};
-				this.getApiCredit=function(){
-					return '<a target="_top" href="http://www.panoramio.com">'+
-					'<img width="67" height="14" src="http://www.panoramio.com/img/logo-tos.png">'+
-					'</a>'+
-					'<span>Photos are copyrighted by their owners</span>';
+				return {
+					getID: function(){return "pano"+String(rawPhoto.photo_id);},
+					getUrl: function(){return rawPhoto.photo_file_url;},
+					getDate: function(){return new Date(rawPhoto.upload_date);},
+					getPage: function(){return rawPhoto.photo_url;},
+					getOwnerUrl: function(){return rawPhoto.owner_url;},
+					getOwnerName: function(){return rawPhoto.owner_name;},
+					getTitle: function(){return rawPhoto.photo_title;},
+					getLicenseSnippet: function(){return "";},
+					getApiCredit: function(){
+						return '<a target="_top" href="http://www.panoramio.com">'+
+						'<img width="67" height="14" src="http://www.panoramio.com/img/logo-tos.png">'+
+						'</a>'+
+						'<span>Photos are copyrighted by their owners</span>';
+					},
+					getRaw: function(){return JSON.stringify(rawPhoto);}
 				};
-				this.getRaw=function(){return JSON.stringify(rawPhoto);};
 			};
 		return {
 			requestPhotos: function(selectedCircle,photosFoundCallback){
@@ -373,14 +366,17 @@ pictorical= function(){
 		},
 		
 		load: function(){
-			var displayAreaPhotos=slideshow.createPhotoDisplay([flickr.createSource(),panoramio.requestPhotos]);
-			scene.loadMap(displayAreaPhotos);
+			var displayAreaPhotos=
+				slideshow($('#slideshow ul.slideshow'),
+						[flickr.createSource(),panoramio.requestPhotos]).
+					display;
+			makeScene($('#map'),displayAreaPhotos);
 		}
 	};
 }();
 
 $(window).hashchange(function(){
-	if(window.location.hash==""||window.location.hash=="#map_selection") pictorical.showMap();
+	if(window.location.hash===""||window.location.hash==="#map_selection") pictorical.showMap();
 	else pictorical.showSlides();
 });
 
@@ -414,7 +410,7 @@ google.maps.LatLng.prototype.distanceTo=
  */
 function(point, precision) {
   // default 4 sig fig reflects typical 0.3% accuracy of spherical model
-  if (typeof precision == 'undefined') precision = 4;  
+  if (typeof precision === 'undefined') precision = 4;  
   
   var R = 6371;
   var toRadians=function(deg){return Math.PI*deg/180};
