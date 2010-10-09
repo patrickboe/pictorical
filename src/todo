@@ -1,15 +1,13 @@
 research/come up with/support a versioning scheme
-show a loading dialog during search
-adjust image map on window resize
+make circle moveable
+add pause button or pause hover
 better slideshow layout
 add a "go to" control
-put a dot or flag at the center of new circle?
-create mechanism for automated removal of images upon owner request
+add bug reporting
+create slideshow -> resize window -> go back to map -> map is ensmallened incorrectly
 develop p3p privacy header
-need a logo so that the panoramio logo is not the largest one on the site
 add an about page
 figure out support for truly historical images
-make circle moveable
 add gallery / slideshow browse component
-add more info about what the next click will do while on the map page
-sometimes only the upper left corner of map shows up after you hit 'back to map.' Wha?
+adjust image map on window resize
+create mechanism for automated removal of images upon owner request
