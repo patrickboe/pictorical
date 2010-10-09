@@ -110,18 +110,22 @@ pictorical= function(){
 		};
 		
 		var acceptUpdates=function(){
-			var circleHoverListener=null;
-			var setHover=function(eventName,action){
-				circleHoverListener=google.maps.event.addListener(circle,eventName,action);
+			var circleListeners=[], enterEvents=["mousedown","mouseover"],leaveEvents=["mouseup","mouseout"];
+			var setCircleBehavior=function(eventNames,action){
+				for(var i in eventNames){
+					circleListeners.push(google.maps.event.addListener(circle,eventNames[i],action));
+				}
 			};
-			var changeHover=function(nextEvent,nextAction,draggable){
-				google.maps.event.removeListener(circleHoverListener);
-				setHover(nextEvent,nextAction);
+			var changeCircleDrag=function(nextEvents,nextAction,draggable){
+				while(circleListeners.length>0){
+					google.maps.event.removeListener(circleListeners.pop());
+				}
+				setCircleBehavior(nextEvents,nextAction);
 				map.setOptions({draggable:!draggable});
 			};
-			var addDrag=function(){changeHover("mouseout",dropDrag,true);};
-			var dropDrag=function(){changeHover("mouseover",addDrag,false);};
-			setHover("mouseover",addDrag);
+			var addDrag=function(){changeCircleDrag(leaveEvents,dropDrag,true);};
+			var dropDrag=function(){changeCircleDrag(enterEvents,addDrag,false);};
+			setCircleBehavior(enterEvents,addDrag);
 			updateMapClickBehavior(function(){
 				displayHint("You can choose another circle if you want.");
 				cancelSelection();
@@ -208,7 +212,7 @@ pictorical= function(){
 				var acceptPhotos=function(photos){
 					responsesReceived++;
 					if(!!timeoutID){
-						if(selectedCircle.getMap()!=null){
+						if(selectedCircle.getMap()!==null){
 							allPhotos=allPhotos.concat(photos);
 							if(responsesReceived===requestsMade){
 								cancelTimeout();
@@ -223,7 +227,7 @@ pictorical= function(){
 					makeRequest(sources[i]);
 				}
 				timeoutID=window.setTimeout(function(){
-					if(selectedCircle.getMap()!=null){
+					if(selectedCircle.getMap()!==null){
 						displayAllPhotos();
 					}
 					timeoutID=null;
