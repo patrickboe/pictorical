@@ -29,9 +29,11 @@ pictorical= function(){
 		var updateMapClickBehavior=function(lambda){
 			mapClickListener=google.maps.event.addListener(map,"click",lambda);
 		};
-		var findDistance=function(locA,locB){
+		
+		var distanceInMeters=function(locA,locB){
 			return Math.round(locA.distanceTo(locB));
 		};
+		
 		var drawStartingMap=function(){
 			var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
 			var startOptions=
@@ -40,13 +42,13 @@ pictorical= function(){
 								center: HardenaRestaurant,
 								mapTypeId: google.maps.MapTypeId.ROADMAP
 							}
-			var map = new google.maps.Map($map[0],startOptions);
 			var pictoricalTitle=$('header')[0];
 			var terms=$('footer').clone()[0];
+			map = new google.maps.Map($map[0],startOptions);
 			map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
 			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
-			return map;
-		}
+		};
+		
 		var drawCircleAt=function(location) {
 		  var clickedLocation = new google.maps.LatLng(location);
 		  circle = new google.maps.Circle({
@@ -60,23 +62,27 @@ pictorical= function(){
 		  	  strokeWeight: 3
 		  });
 		};
+		
 		var deleteCircle=function(){
 			circle.setMap(null);
 			circle=null;
 		};
+		
 		var cancelSelection=function(event){
 			deleteCircle();
 			google.maps.event.removeListener(mapClickListener);
 			acceptSelections();
 		};
+		
 		var acceptSelections=function(){
 			updateMapClickBehavior(function(event){
 				drawCircleAt(event.latLng);
 				google.maps.event.removeListener(mapClickListener);
 				displayHint("Move your mouse to size the circle, then click again.");
-				acceptChanges();
+				acceptResizing();
 			});
 		};
+		
 		var onSelectionCallbackDone = function(hasResults){ 
 			if(hasResults) {
 				displayHint("Click off the circle to cancel.");
@@ -85,30 +91,44 @@ pictorical= function(){
 				cancelSelection();
 			}
 		};
-		var acceptChanges=function(){
+		
+		var acceptResizing=function(){
 			var finalizeSelection=function(event){
 				google.maps.event.removeListener(mapMoveListener);
 				google.maps.event.removeListener(mapClickListener);
 				google.maps.event.removeListener(doneOnCircleListener);
 				window.location.hash="#map_selection";
-				selectionCallback(circle, onSelectionCallbackDone);
-				displayHint("Loading a slideshow. Click off the circle to cancel.",true);
-				acceptCancellations();
+				//selectionCallback(circle, onSelectionCallbackDone);
+				displayHint("Loading results. Click off the circle to cancel.",true);
+				acceptUpdates();
 			};
 			var doneOnCircleListener=google.maps.event.addListener(circle,"mousedown",finalizeSelection);
 			var mapMoveListener=google.maps.event.addListener(map,"mousemove",function(event){
-				circle.setRadius(findDistance(circle.getCenter(), event.latLng));
+				circle.setRadius(distanceInMeters(circle.getCenter(), event.latLng));
 			});
 			updateMapClickBehavior(finalizeSelection);
 		};
-		var acceptCancellations=function(){
+		
+		var acceptUpdates=function(){
+			var circleHoverListener=null;
+			var setHover=function(eventName,action){
+				circleHoverListener=google.maps.event.addListener(circle,eventName,action);
+			};
+			var changeHover=function(nextEvent,nextAction,draggable){
+				google.maps.event.removeListener(circleHoverListener);
+				setHover(nextEvent,nextAction);
+				map.setOptions({draggable:!draggable});
+			};
+			var addDrag=function(){changeHover("mouseout",dropDrag,true);};
+			var dropDrag=function(){changeHover("mouseover",addDrag,false);};
+			setHover("mouseover",addDrag);
 			updateMapClickBehavior(function(){
 				displayHint("You can choose another circle if you want.");
 				cancelSelection();
 			});
 		};
 		
-		map=drawStartingMap();
+		drawStartingMap();
 		acceptSelections();
 	}; 
 
