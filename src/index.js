@@ -78,7 +78,7 @@ pictorical= function(){
 			updateMapClickBehavior(function(event){
 				drawCircleAt(event.latLng);
 				google.maps.event.removeListener(mapClickListener);
-				displayHint("Move your mouse to size the circle, then click again.");
+				displayHint("Move to resize, then click again.");
 				acceptResizing();
 			});
 		};
@@ -110,24 +110,68 @@ pictorical= function(){
 		};
 		
 		var acceptUpdates=function(){
-			var circleListeners=[], enterEvents=["mousedown","mouseover"],leaveEvents=["mouseup","mouseout"];
-			var setCircleBehavior=function(eventNames,action){
+			var 
+			circleFocusListeners=[], 
+			dragListener=null, 
+			moveListener=null,
+			enterEvents=["mouseover","mousedown"],
+			leaveEvents=["mouseout","mouseup"],
+			
+			setCircleBehavior=function(eventNames,action){
 				for(var i in eventNames){
-					circleListeners.push(google.maps.event.addListener(circle,eventNames[i],action));
+					circleFocusListeners.push(google.maps.event.addListener(circle,eventNames[i],action));
 				}
-			};
-			var changeCircleDrag=function(nextEvents,nextAction,draggable){
-				while(circleListeners.length>0){
-					google.maps.event.removeListener(circleListeners.pop());
+			},
+			
+			changeCircleBehavior=function(nextEvents,nextAction){
+				while(circleFocusListeners.length>0){
+					google.maps.event.removeListener(circleFocusListeners.pop());
 				}
 				setCircleBehavior(nextEvents,nextAction);
+			},
+			
+			changeCircleDrag=function(nextEvents,nextAction,draggable){
+				changeCircleBehavior(nextEvents,nextAction);
 				map.setOptions({draggable:!draggable});
+			},
+			
+			addDrag=function(event){
+				changeCircleDrag(leaveEvents,dropDrag,true);
+				dragListener=google.maps.event.addListener(circle,"mousedown",startDrag);
+			},
+			
+			dropDrag=function(){
+				if(moveListener===null){
+					changeCircleDrag(enterEvents,addDrag,false);
+					google.maps.event.removeListener(dragListener);
+					dragListener=null;
+				}
+			}, 
+			
+			startDrag=function(event){ 
+				moveListener=google.maps.event.addListener(map,"mousemove",followMouse);
+				updateDragListener("mouseup",endDrag); 
+			},
+			
+			endDrag=function(event){ 
+				alert("end drag");
+				google.maps.event.removeListener(moveListener);
+				moveListener=null;
+				updateDragListener("mousedown",startDrag); 
+			},
+			
+			followMouse=function(event){
+				circle.setCenter(event.latLng);
+			},
+			
+			updateDragListener=function(eventName,handler){
+				google.maps.event.removeListener(dragListener);
+				dragListener=google.maps.event.addListener(circle,eventName,handler);
 			};
-			var addDrag=function(){changeCircleDrag(leaveEvents,dropDrag,true);};
-			var dropDrag=function(){changeCircleDrag(enterEvents,addDrag,false);};
+
 			setCircleBehavior(enterEvents,addDrag);
 			updateMapClickBehavior(function(){
-				displayHint("You can choose another circle if you want.");
+				displayHint("You can choose another circle.");
 				cancelSelection();
 			});
 		};
