@@ -72,10 +72,10 @@ pictorical= function(){
 		};
 		
 		var cancelSelection=function(event){
+			cancelSelectionCallback();
 			circle.setMap(null);
 			circle=null;
 			google.maps.event.removeListener(mapClickListener);
-			cancelSelectionCallback();
 			acceptSelections();
 		};
 		
@@ -153,9 +153,9 @@ pictorical= function(){
 			}, 
 			
 			startDrag=function(event){ 
+				cancelSelectionCallback();
 				moveListener=google.maps.event.addListener(map,"mousemove",followMouse);
 				changeCircleBehavior(["mouseup","click"],endDrag); //mouseup isn't raised at the expected time on all browsers. click is a fallback.
-				cancelSelectionCallback();
 				displayHint("You can move the circle.");
 			},
 			
@@ -222,15 +222,16 @@ pictorical= function(){
 			}
 			//set the images to cycle once the first one loads
 			$slides.find("img.slide:first").load(function(){
-				onload(true);
-				pictorical.showSlides()
-				window.location.hash="#slideshow";
-				$slides.cycle({
-					   timeout: 4000,
-					   prev:   '.prev', 
-					   next:   '.next',
-					   after:	adjustImageMap
-				});
+				if (onload(true)){
+					pictorical.showSlides()
+					window.location.hash="#slideshow";
+					$slides.cycle({
+						   timeout: 4000,
+						   prev:   '.prev', 
+						   next:   '.next',
+						   after:	adjustImageMap
+					});
+				}
 			});
 		};
 		
@@ -240,13 +241,21 @@ pictorical= function(){
 				var responsesReceived=0;
 				var allPhotos=[];
 				var timeoutID;
+				var cancelled=false;
 				
 				var displayAllPhotos=function(){
 					allPhotos.sort(function(a,b){
 						if(a.getDate() > b.getDate()) return 1;
 						return -1;
 					});
-					loadSlides(allPhotos,onload);
+					loadSlides(allPhotos,function(hasPhotos){
+						if(!cancelled){
+							onload(hasPhotos);
+							return true;
+						} else {
+							return false;
+						}
+					});
 				};
 				var makeRequest=function(requestFunction){
 					requestsMade++;
@@ -276,6 +285,7 @@ pictorical= function(){
 				return {
 					cancel: function(){
 						cancelTimeout();
+						cancelled=true;
 					}
 				}
 			}
