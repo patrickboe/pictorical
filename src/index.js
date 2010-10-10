@@ -19,7 +19,8 @@ pictorical= function(){
 		var map;
 		var circle;
 		var mapClickListener=null;
-
+		var selectionCallbackHandle=null;
+		
 		var displayHint=function(hint,isLoading){
 			var $hints=$map.find("p.hints");
 			$hints.toggleClass('loading',!!isLoading);
@@ -63,14 +64,18 @@ pictorical= function(){
 		  });
 		};
 		
-		var deleteCircle=function(){
-			circle.setMap(null);
-			circle=null;
+		var cancelSelectionCallback=function(){
+			if(selectionCallbackHandle!==null){
+				selectionCallbackHandle.cancel();
+				selectionCallbackHandle=null;
+			}
 		};
 		
 		var cancelSelection=function(event){
-			deleteCircle();
+			circle.setMap(null);
+			circle=null;
 			google.maps.event.removeListener(mapClickListener);
+			cancelSelectionCallback();
 			acceptSelections();
 		};
 		
@@ -90,6 +95,7 @@ pictorical= function(){
 				displayHint("No results found. Try a bigger circle.");
 				cancelSelection();
 			}
+			selectionCallbackHandle=null;
 		};
 		
 		var acceptResizing=function(){
@@ -98,8 +104,7 @@ pictorical= function(){
 				google.maps.event.removeListener(mapClickListener);
 				google.maps.event.removeListener(doneOnCircleListener);
 				window.location.hash="#map_selection";
-				//selectionCallback(circle, onSelectionCallbackDone);
-				displayHint("Loading results. Click off the circle to cancel.",true);
+				selectionMade();
 				acceptUpdates();
 			};
 			var doneOnCircleListener=google.maps.event.addListener(circle,"mousedown",finalizeSelection);
@@ -109,10 +114,14 @@ pictorical= function(){
 			updateMapClickBehavior(finalizeSelection);
 		};
 		
+		var selectionMade=function(){
+			selectionCallbackHandle=selectionCallback(circle, onSelectionCallbackDone);
+			displayHint("Loading results. Click off the circle to cancel.",true);
+		};
+		
 		var acceptUpdates=function(){
 			var 
 			circleFocusListeners=[], 
-			dragListener=null, 
 			moveListener=null,
 			enterEvents=["mouseover","mousedown"],
 			leaveEvents=["mouseout","mouseup"],
@@ -130,43 +139,36 @@ pictorical= function(){
 				setCircleBehavior(nextEvents,nextAction);
 			},
 			
-			changeCircleDrag=function(nextEvents,nextAction,draggable){
-				changeCircleBehavior(nextEvents,nextAction);
-				map.setOptions({draggable:!draggable});
-			},
-			
 			addDrag=function(event){
-				changeCircleDrag(leaveEvents,dropDrag,true);
-				dragListener=google.maps.event.addListener(circle,"mousedown",startDrag);
+				changeCircleBehavior(leaveEvents,dropDrag);
+				map.setOptions({draggable:false});
+				setCircleBehavior(["mousedown","click"],startDrag);
 			},
 			
-			dropDrag=function(){
-				if(moveListener===null){
-					changeCircleDrag(enterEvents,addDrag,false);
-					google.maps.event.removeListener(dragListener);
-					dragListener=null;
+			dropDrag=function(event){
+				if(moveListener!==null){
+					changeCircleBehavior(enterEvents,addDrag);
+					map.setOptions({draggable:true});
 				}
 			}, 
 			
 			startDrag=function(event){ 
 				moveListener=google.maps.event.addListener(map,"mousemove",followMouse);
-				updateDragListener("mouseup",endDrag); 
+				changeCircleBehavior(["mouseup","click"],endDrag); //mouseup isn't raised at the expected time on all browsers. click is a fallback.
+				cancelSelectionCallback();
+				displayHint("You can move the circle.");
 			},
 			
 			endDrag=function(event){ 
-				alert("end drag");
 				google.maps.event.removeListener(moveListener);
 				moveListener=null;
-				updateDragListener("mousedown",startDrag); 
+				changeCircleBehavior(leaveEvents,dropDrag);
+				setCircleBehavior(["mousedown"],startDrag);
+				selectionMade();
 			},
 			
 			followMouse=function(event){
 				circle.setCenter(event.latLng);
-			},
-			
-			updateDragListener=function(eventName,handler){
-				google.maps.event.removeListener(dragListener);
-				dragListener=google.maps.event.addListener(circle,eventName,handler);
 			};
 
 			setCircleBehavior(enterEvents,addDrag);
@@ -238,6 +240,7 @@ pictorical= function(){
 				var responsesReceived=0;
 				var allPhotos=[];
 				var timeoutID;
+				
 				var displayAllPhotos=function(){
 					allPhotos.sort(function(a,b){
 						if(a.getDate() > b.getDate()) return 1;
@@ -256,14 +259,10 @@ pictorical= function(){
 				var acceptPhotos=function(photos){
 					responsesReceived++;
 					if(!!timeoutID){
-						if(selectedCircle.getMap()!==null){
-							allPhotos=allPhotos.concat(photos);
-							if(responsesReceived===requestsMade){
-								cancelTimeout();
-								displayAllPhotos();
-							}
-						} else {
+						allPhotos=allPhotos.concat(photos);
+						if(responsesReceived===requestsMade){
 							cancelTimeout();
+							displayAllPhotos();
 						}
 					}
 				}
@@ -271,11 +270,14 @@ pictorical= function(){
 					makeRequest(sources[i]);
 				}
 				timeoutID=window.setTimeout(function(){
-					if(selectedCircle.getMap()!==null){
-						displayAllPhotos();
-					}
+					displayAllPhotos();
 					timeoutID=null;
 				},5000);
+				return {
+					cancel: function(){
+						cancelTimeout();
+					}
+				}
 			}
 		};
 	};
