@@ -182,8 +182,10 @@ pictorical= function(){
 		acceptSelections();
 	}; 
 
-	var slideshow=function($slides,sources){
-		var loadSlides=function(photos,onload){
+	var slideshow=function($container,sources){
+		var $slides=$container.find('ul.slideshow'),
+		$pause=$container.find('.pause'),
+		loadSlides=function(photos,onload){
 			var adjustImageMap=function(){
 				   //set up img map areas for current photo
 				   var $this=$(this);
@@ -215,7 +217,7 @@ pictorical= function(){
 				onload(false);
 				return;
 			}
-			$slides.empty();
+			$slides.cycle('stop').empty();
 			//add photos to the DOM
 			for(var i in photos){
 				loadPhoto(photos[i]);
@@ -231,8 +233,21 @@ pictorical= function(){
 						   next:   '.next',
 						   after:	adjustImageMap
 					});
+					setState(0)();
 				}
 			});
+		}, 
+		
+		states=[{name: 'resume', title:'Resume'},
+		        {name: 'pause', title: 'Pause'}],
+		
+		setState=function(ix){
+			return function(){
+				var next=(ix+1)%2;
+				$slides.cycle(states[ix].name);
+				$pause.click(setState(next)).text(states[next].title);
+				return false;
+			}
 		};
 		
 		return {
@@ -461,7 +476,7 @@ pictorical= function(){
 		
 		load: function(){
 			var displayAreaPhotos=
-				slideshow($('#slideshow ul.slideshow'),
+				slideshow($('#slideshow'),
 						[flickr.createSource(),panoramio.requestPhotos]).
 					display;
 			makeScene($('#map'),displayAreaPhotos);
