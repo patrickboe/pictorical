@@ -126,44 +126,42 @@ pictorical= function(){
 			enterEvents=["mouseover","mousedown"],
 			leaveEvents=["mouseout","mouseup"],
 			
-			setCircleBehavior=function(eventNames,action){
+			addCircleBehavior=function(eventNames,action){
 				for(var i in eventNames){
 					circleFocusListeners.push(google.maps.event.addListener(circle,eventNames[i],action));
 				}
 			},
 			
-			changeCircleBehavior=function(nextEvents,nextAction){
+			replaceCircleBehavior=function(nextEvents,nextAction){
 				while(circleFocusListeners.length>0){
 					google.maps.event.removeListener(circleFocusListeners.pop());
 				}
-				setCircleBehavior(nextEvents,nextAction);
+				addCircleBehavior(nextEvents,nextAction);
 			},
 			
-			addDrag=function(event){
-				changeCircleBehavior(leaveEvents,dropDrag);
+			addDraggability=function(event){
+				replaceCircleBehavior(leaveEvents,dropDraggability);
 				map.setOptions({draggable:false});
-				setCircleBehavior(["mousedown","click"],startDrag);
+				addCircleBehavior(["mousedown","click"],startDrag);
 			},
 			
-			dropDrag=function(event){
-				if(moveListener!==null){
-					changeCircleBehavior(enterEvents,addDrag);
-					map.setOptions({draggable:true});
-				}
+			dropDraggability=function(event){
+				replaceCircleBehavior(enterEvents,addDraggability);
+				map.setOptions({draggable:true});
 			}, 
 			
 			startDrag=function(event){ 
 				cancelSelectionCallback();
 				moveListener=google.maps.event.addListener(map,"mousemove",followMouse);
-				changeCircleBehavior(["mouseup","click"],endDrag); //mouseup isn't raised at the expected time on all browsers. click is a fallback.
+				replaceCircleBehavior(["mouseup","click"],endDrag); //mouseup isn't raised at the expected time on all browsers. click is a fallback.
 				displayHint("You can move the circle.");
 			},
 			
 			endDrag=function(event){ 
 				google.maps.event.removeListener(moveListener);
 				moveListener=null;
-				changeCircleBehavior(leaveEvents,dropDrag);
-				setCircleBehavior(["mousedown"],startDrag);
+				replaceCircleBehavior(leaveEvents,dropDraggability);
+				addCircleBehavior(["mousedown"],startDrag);
 				selectionMade();
 			},
 			
@@ -171,7 +169,7 @@ pictorical= function(){
 				circle.setCenter(event.latLng);
 			};
 
-			setCircleBehavior(enterEvents,addDrag);
+			addCircleBehavior(enterEvents,addDraggability);
 			updateMapClickBehavior(function(){
 				displayHint("You can choose another circle.");
 				cancelSelection();
@@ -184,7 +182,6 @@ pictorical= function(){
 
 	var slideshow=function($container,sources){
 		var $slides=$container.find('ul.slideshow'),
-		$pause=$container.find('.pause'),
 		loadSlides=function(photos,onload){
 			var adjustImageMap=function(){
 				   //set up img map areas for current photo
@@ -225,7 +222,6 @@ pictorical= function(){
 			//set the images to cycle once the first one loads
 			$slides.find("img.slide:first").load(function(){
 				if (onload(true)){
-					pictorical.showSlides()
 					window.location.hash="#slideshow";
 					$slides.cycle({
 						   timeout: 4000,
@@ -233,22 +229,26 @@ pictorical= function(){
 						   next:   '.next',
 						   after:	adjustImageMap
 					});
-					setState(0)();
+					start();
 				}
 			});
-		}, 
+		},
 		
-		states=[{name: 'resume', title:'Resume'},
-		        {name: 'pause', title: 'Pause'}],
-		
-		setState=function(ix){
-			return function(){
+		start=function(){
+			var ix=null, 
+			states=[{name: 'resume', title:'Resume'},
+			        {name: 'pause', title: 'Pause'}],
+			$pause=$container.find('.pause'),
+			advance=function(){
 				var next=(ix+1)%2;
 				$slides.cycle(states[ix].name);
-				$pause.click(setState(next)).text(states[next].title);
+				$pause.text(states[next].title);
+				ix=next;
 				return false;
-			}
-		};
+			};
+			$pause.click(advance);
+			return function(){ix=0; advance();};
+		}();
 		
 		return {
 			display: function(selectedCircle, onload){
