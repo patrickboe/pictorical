@@ -9,17 +9,19 @@
 pictorical= function(){
 	var htmlEncode=function(value){ 
 	  return $('<div/>').text(value).html(); 
-	} 
+	},
 
-	var constructArray = function(arr,constructor){
+	constructArray = function(arr,constructor){
 		for (var i in arr) arr[i]=new constructor(arr[i]);
-	}
+	},
 	
-	var makeScene=function($map,selectionCallback){
+	onMapRedisplay=function(){},
+	
+	makeScene=function($map,onSelection,onSelectionLoaded){
 		var map;
 		var circle;
 		var mapClickListener=null;
-		var selectionCallbackHandle=null;
+		var selectionHandle=null;
 		
 		var displayHint=function(hint,isLoading){
 			var $hints=$map.find("p.hints");
@@ -65,9 +67,9 @@ pictorical= function(){
 		};
 		
 		var cancelSelectionCallback=function(){
-			if(selectionCallbackHandle!==null){
-				selectionCallbackHandle.cancel();
-				selectionCallbackHandle=null;
+			if(!!selectionHandle){
+				selectionHandle.cancel();
+				selectionHandle=null;
 			}
 		};
 		
@@ -88,14 +90,16 @@ pictorical= function(){
 			});
 		};
 		
-		var onSelectionCallbackDone = function(hasResults){ 
-			if(hasResults) {
+		var myOnSelectionLoaded=function(hasResults){
+			var res=onSelectionLoaded.apply(null,arguments);
+			if(res) {
 				displayHint("Click off the circle to cancel.");
 			} else {
 				displayHint("No results found. Try a bigger circle.");
 				cancelSelection();
 			}
-			selectionCallbackHandle=null;
+			selectionHandle=null;
+			return res;
 		};
 		
 		var acceptResizing=function(){
@@ -103,7 +107,6 @@ pictorical= function(){
 				google.maps.event.removeListener(mapMoveListener);
 				google.maps.event.removeListener(mapClickListener);
 				google.maps.event.removeListener(doneOnCircleListener);
-				window.location.hash="#map_selection";
 				selectionMade();
 				acceptUpdates();
 			};
@@ -115,7 +118,7 @@ pictorical= function(){
 		};
 		
 		var selectionMade=function(){
-			selectionCallbackHandle=selectionCallback(circle, onSelectionCallbackDone);
+			selectionHandle=onSelection(circle, myOnSelectionLoaded);
 			displayHint("Loading results. Click off the circle to cancel.",true);
 		};
 		
@@ -178,27 +181,31 @@ pictorical= function(){
 		
 		drawStartingMap();
 		acceptSelections();
-	}; 
-
-	var slideshow=function($container,sources){
+		return function(){
+			google.maps.event.trigger(map, 'resize');
+		};
+	},
+	
+	slideshow=function($container,sources){
 		var $slides=$container.find('ul.slideshow'),
 		loadSlides=function(photos,onload){
 			var adjustImageMap=function(){
 				   //set up img map areas for current photo
-				   var $this=$(this);
-				   var img=$this.find("img.slide")[0];
-				   var areaW=Math.round(img.clientWidth/2)-5
-				   var prevRightEdge=String(areaW);
-				   var nextLeftEdge=String(areaW+10);
-				   var w=String(img.clientWidth);
-				   var h=String(img.clientHeight);
+				   var $this=$(this),
+				   img=$this.find("img.slide")[0],
+				   areaW=Math.round(img.clientWidth/2)-5,
+				   prevRightEdge=String(areaW),
+				   nextLeftEdge=String(areaW+10),
+				   w=String(img.clientWidth),
+				   h=String(img.clientHeight),
+				   prevRect="0,0,"+prevRightEdge+","+h,
+				   nextRect=nextLeftEdge+",0,"+w+","+h;
 				   $this
-				   	.find("area.prev")
-				   		.attr("coords","0,0,"+prevRightEdge+","+h)
-				   	.end()
-				   	.find("area.next")
-			   			.attr("coords", nextLeftEdge+",0,"+w+","+h)
+				   	.find("area.prev").attr("coords",prevRect)
+				   		.end()
+				   	.find("area.next").attr("coords",nextRect);
 			   };
+			
 			var loadPhoto=function(photo){
 				$slides.append('<li><img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
 				'<map name="p'+photo.getID()+'">'+
@@ -214,22 +221,22 @@ pictorical= function(){
 				onload(false);
 				return;
 			}
-			$slides.cycle('stop').empty();
+			$slides.cycle('destroy').empty();
 			//add photos to the DOM
 			for(var i in photos){
 				loadPhoto(photos[i]);
 			}
 			//set the images to cycle once the first one loads
 			$slides.find("img.slide:first").load(function(){
-				if (onload(true)){
-					window.location.hash="#slideshow";
+				if (onload(true)){ 
+					showSlides();
+					start();
 					$slides.cycle({
 						   timeout: 4000,
 						   prev:   '.prev', 
 						   next:   '.next',
 						   after:	adjustImageMap
 					});
-					start();
 				}
 			});
 		},
@@ -305,9 +312,9 @@ pictorical= function(){
 				}
 			}
 		};
-	};
+	},
 	
-	var flickr = function(){
+	flickr = function(){
 		var parseDate= function (flickrDate){
 			var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
 			var dateParts=dateOnly.split("-");
@@ -405,9 +412,9 @@ pictorical= function(){
 				};
 			}
 		};
-	}();
+	}(),
 	
-	var panoramio= function(){
+	panoramio= function(){
 		var Photo=
 			function(rawPhoto){
 				return {
@@ -461,40 +468,43 @@ pictorical= function(){
 						});
 				}
 			};
-		}();
-	
-	return{
-		showMap: function(){
+		}(), 
+		
+		showMap=function(){
 			$("#slideshow").hide();
 			$("#map").show();
+			onMapRedisplay();
+			window.location.hash="";
 		},
 		
-		showSlides: function(){
+		showSlides=function(){
 			$("#map").hide();
 			$("#slideshow").show();
+			window.location.hash="slideshow";
 		},
 		
-		load: function(){
-			var displayAreaPhotos=
-				slideshow($('#slideshow'),
-						[flickr.createSource(),panoramio.requestPhotos]).
-					display;
-			makeScene($('#map'),displayAreaPhotos);
+		onSlidesLoaded=function(hasResults){ 
+			if(hasResults){
+				showSlides();
+			} 
+			return hasResults; 
+		};
+	
+	return function(){
+		if("hash" in window.location && window.location.hash.length){
+			window.location="";
 		}
+		$(window).hashchange(function(){
+			if(window.location.hash==="") showMap();
+			else showSlides();
+		});
+		onMapRedisplay=makeScene($('#map'),
+			slideshow($('#slideshow'),[flickr.createSource(),panoramio.requestPhotos]).display,
+			onSlidesLoaded);
 	};
 }();
 
-$(window).hashchange(function(){
-	if(window.location.hash===""||window.location.hash==="#map_selection") pictorical.showMap();
-	else pictorical.showSlides();
-});
-
-$(function(){
-	if("hash" in window.location && window.location.hash.length){
-		window.location="";
-	}
-	pictorical.load();
-});
+$(pictorical);
 
 /** 
  * The following formulas are adapted slightly for google's object model from Chris Veness' code under 
