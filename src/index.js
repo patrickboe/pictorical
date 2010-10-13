@@ -15,7 +15,7 @@ pictorical= function(){
 		for (var i in arr) arr[i]=new constructor(arr[i]);
 	},
 	
-	onMapRedisplay=function(){},
+	onMapRedisplay=null,
 	
 	makeScene=function($map,onSelection,onSelectionLoaded){
 		var map;
