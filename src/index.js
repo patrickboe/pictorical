@@ -15,13 +15,13 @@ pictorical= function(){
 		for (var i in arr) arr[i]=new constructor(arr[i]);
 	},
 	
-	onMapRedisplay=null,
+	onMapDisplay=function(){},
 	
-	makeScene=function($map,onSelection,onSelectionLoaded){
+	makeScene=function($map,circle,onSelection,onSelectionLoaded){ //returns a function to be called on show
 		var map;
-		var circle;
 		var mapClickListener=null;
 		var selectionHandle=null;
+		var preloaded=!!circle;
 		
 		var displayHint=function(hint,isLoading){
 			var $hints=$map.find("p.hints");
@@ -43,6 +43,8 @@ pictorical= function(){
 							{
 								zoom: 15,
 								center: HardenaRestaurant,
+								streetViewControl: false,
+								mapTypeControl: false,
 								mapTypeId: google.maps.MapTypeId.ROADMAP
 							}
 			var pictoricalTitle=$('header')[0];
@@ -52,12 +54,12 @@ pictorical= function(){
 			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
 		};
 		
-		var drawCircleAt=function(location) {
+		var drawCircleAt=function(location,radius) {
 		  var clickedLocation = new google.maps.LatLng(location);
 		  circle = new google.maps.Circle({
 			  center: location, 
 			  map: map,
-			  radius: 50,
+			  radius: radius,
 			  fillColor: "#FF0000",
 		  	  fillOpacity: 0.3,
 		  	  strokeColor: "#FF0000",
@@ -90,7 +92,7 @@ pictorical= function(){
 			});
 		};
 		
-		var myOnSelectionLoaded=function(hasResults){
+		var myOnSelectionLoaded=function(selection, hasResults){
 			var res=onSelectionLoaded.apply(null,arguments);
 			if(res) {
 				displayHint("Click off the circle to cancel.");
@@ -180,9 +182,19 @@ pictorical= function(){
 		};
 		
 		drawStartingMap();
-		acceptSelections();
-		return function(){
+		if(!circle){
+			acceptSelections();
+		} else {
+			drawCircleAt(circle.getCenter(),circle.getRadius());
+			acceptUpdates();
+		}
+		return function(){ 
 			google.maps.event.trigger(map, 'resize');
+			if(preloaded){
+				map.setCenter(circle.getCenter());
+				map.fitBounds(circle.getBounds());
+				preloaded=false;
+			}
 		};
 	},
 	
@@ -229,7 +241,6 @@ pictorical= function(){
 			//set the images to cycle once the first one loads
 			$slides.find("img.slide:first").load(function(){
 				if (onload(true)){ 
-					showSlides();
 					start();
 					$slides.cycle({
 						   timeout: 4000,
@@ -272,8 +283,7 @@ pictorical= function(){
 					});
 					loadSlides(allPhotos,function(hasPhotos){
 						if(!cancelled){
-							onload(hasPhotos);
-							return true;
+							return onload(selectedCircle, hasPhotos);
 						} else {
 							return false;
 						}
@@ -470,38 +480,81 @@ pictorical= function(){
 			};
 		}(), 
 		
-		showMap=function(){
-			$("#slideshow").hide();
-			$("#map").show();
-			onMapRedisplay();
-			window.location.hash="";
-		},
+		loader=function(){
+			var showMap=function(){
+				$("#slideshow").hide();
+				$("#map").show();
+				onMapDisplay();
+				if(window.location.hash.length){
+					window.location.hash="";
+				}
+			},
+			
+			showSlides=function(selection){
+				$("#map").hide();
+				$("#slideshow").show();
+				if(!!selection){
+					window.location.hash="slideshow:"+selection.center.lat()+","+selection.center.lng()+","+selection.radius;
+				}
+			},
+			
+			onSlidesLoaded=function(selection, hasResults){ 
+				if(hasResults){
+					showSlides(selection);
+				} 
+				return hasResults; 
+			},
+			
+			hashToSlideshowSelection=function(hash){
+				var keyVal=hash.split(":");
+				var parts= keyVal.length===2 && keyVal[0] === "#slideshow" ? keyVal[1].split(",") : [];
+				if(parts.length){
+					return new google.maps.Circle({
+						  center: new google.maps.LatLng(Number(parts[0]),Number(parts[1])), 
+						  map: null,
+						  radius: Number(parts[2]),
+						  fillColor: "#FF0000",
+					  	  fillOpacity: 0.3,
+					  	  strokeColor: "#FF0000",
+					  	  strokeOpacity: 0.8,
+					  	  strokeWeight: 3
+					});
+				} else {
+					return null;
+				}
+			},
+			
+			slideSources=[flickr.createSource(),panoramio.requestPhotos],
+			
+			onHashChange=function(){
+				if(window.location.hash==="") showMap();
+				else showSlides();
+			},
+			
+			routeHash=function(displaySlideshow){
+				var selection=hashToSlideshowSelection(window.location.hash);
+				if(!!selection){
+					displaySlideshow(selection,onSlidesLoaded);
+					return selection;
+				} else {
+					window.location="";
+				}
+			};
+			
+			return function(){
+				var displaySlideshow=slideshow($('#slideshow'),slideSources).display;
+				var selection=null;
+				$(window).hashchange(onHashChange);
+				if("hash" in window.location && window.location.hash.length){
+					selection=routeHash(displaySlideshow);
+				} else {
+					showMap();
+				}
+				onMapDisplay=makeScene($('#map'),selection,displaySlideshow,onSlidesLoaded);
+			};
+		}();
 		
-		showSlides=function(){
-			$("#map").hide();
-			$("#slideshow").show();
-			window.location.hash="slideshow";
-		},
-		
-		onSlidesLoaded=function(hasResults){ 
-			if(hasResults){
-				showSlides();
-			} 
-			return hasResults; 
-		};
-	
-	return function(){
-		if("hash" in window.location && window.location.hash.length){
-			window.location="";
-		}
-		$(window).hashchange(function(){
-			if(window.location.hash==="") showMap();
-			else showSlides();
-		});
-		onMapRedisplay=makeScene($('#map'),
-			slideshow($('#slideshow'),[flickr.createSource(),panoramio.requestPhotos]).display,
-			onSlidesLoaded);
-	};
+		return loader;
 }();
 
 $(pictorical);
