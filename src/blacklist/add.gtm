@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>PICTORICAL</title>
+	</head>
+	<body>
+		<h1>Blacklist Your Flickr User ID From Our Slideshows</h1>
+		{% if flickrUser %}
+        <h2>Flickr User {{ flickrUser.id }} has been blacklisted.</h2>
+      	{% else %}
+      	<ul>
+	    {% for user in blacklist %}
+	        <li>{{ user.date }} : {{ user.id|escape }}</li>
+	    {% endfor %}
+	    </ul>
+	    <form method="post">
+	      <label for="user">Flickr User ID</label>
+	      <input type="text" name="user" size="30"/>
+	      <input type="submit" value="Add To Blacklist">
+	    </form>
+		{% endif %}
+	</body>
+</html>
