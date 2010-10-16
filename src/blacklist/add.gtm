@@ -9,13 +9,16 @@
 		{% if flickrUser %}
         <h2>Flickr User {{ flickrUser.id }} has been blacklisted.</h2>
       	{% else %}
+      	{% if error %}
+      	<p class="error">{{ error }}</p>p>
+      	{% endif %}
       	<ul>
 	    {% for user in blacklist %}
 	        <li>{{ user.date }} : {{ user.id|escape }}</li>
 	    {% endfor %}
 	    </ul>
 	    <form method="post">
-	      <label for="user">Flickr User ID</label>
+	      <label for="user">Flickr Username</label>
 	      <input type="text" name="user" size="30"/>
 	      <input type="submit" value="Add To Blacklist">
 	    </form>

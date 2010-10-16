@@ -1,10 +1,13 @@
 import cgi
 import os
+import urllib
 
 from google.appengine.ext.webapp import template
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
+from google.appengine.api import urlfetch
+from xml.dom import minidom
 
 class BlacklistedFlickrUser(db.Model):
     id = db.StringProperty()
@@ -15,11 +18,31 @@ class Registration(webapp.RequestHandler):
         self.show({'blacklist': BlacklistedFlickrUser.all().order('-date').fetch(10)})
         
     def post(self):
-        addition = BlacklistedFlickrUser()
-        addition.id=self.request.get('user')
-        addition.put()
-        self.show({'flickrUser':addition})
+        username=self.request.get('user')
+        userid=username and self.askFlickrFor(username)
+        if(userid):
+            addition = BlacklistedFlickrUser()
+            addition.id=userid
+            addition.put()
+            self.show({'flickrUser':addition})
+        else:
+            self.show({'error':'Flickr says there is no such user.'})
     
+    def askFlickrFor(self, username): #TODO: de-duplicate api key
+        restParams={
+                    "method": "flickr.people.findByUsername",
+                    "api_key": "29f58e785200449dc7f3eafc3e64aacf",
+                    "username": username
+                    }
+        try: 
+            raw=urlfetch.fetch(url="http://api.flickr.com/services/rest/?%" % urllib.urlencode(restParams),deadline=2)
+            if raw.status_code == 200:
+                dom=minidom.parseString(raw)
+                for node in dom.getElementsByTagName('user'):
+                    return node.getAttribute('id')
+        except urlfetch.DownloadError: 
+            pass
+        return ""
     def show(self, templateValues):
         path = os.path.join(os.path.dirname(__file__), 'add.gtm')
         self.response.out.write(template.render(path, templateValues))
