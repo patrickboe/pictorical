@@ -9,9 +9,10 @@
 		{% if username %}
         	<h2>"{{ username }}" has been blacklisted.</h2>
       	{% else %}
-      		<p>The User ID we find for your username will be added to the blacklist that this application uses when vetting photos for display.
-      		Once you have added yourself to the blacklist, you may go to the site's main page and refresh your browser, and you will
-      		have the latest blacklist loaded, causing your photos to be exempted.</p>
+      		<p>The User ID we find for your username will be added to the blacklist published with this application, which it then 
+      		uses when vetting photos for display. We may contact you at your Flickr account to make sure it was you, and not someone
+      		else, who added you to the blacklist. Once you are added, you should go to the <a href="/">main page</a> and fully refresh
+      		your browser to get the latest application before testing that your photos have been removed.</p>
 	      	{% if error %}
 	      		<p class="error">{{ error }}</p>
 	      	{% endif %}

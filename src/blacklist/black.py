@@ -17,7 +17,8 @@ class List(webapp.RequestHandler):
         h=self.response.headers
         h["Content-Type"] = "text/javascript"
         h["Cache-Control"] = "public; max-age=525600"
-        blacklist='["'+'","'.join(u.id for u in BlacklistedFlickrUser.all().order('id'))+'"]'
+        blacklist='","'.join(u.id for u in BlacklistedFlickrUser.all().order('id'))
+        blacklist=blacklist and '["'+blacklist+'"]' or '[]'
         callback=self.request.get('callback')
         self.response.out.write(callback and callback + "(" + blacklist + ");" or blacklist)
 
