@@ -15,13 +15,11 @@ pictorical= function(){
 		for (var i in arr) arr[i]=new constructor(arr[i]);
 	},
 	
-	onMapDisplay=function(){},
-	
 	makeScene=function($map,circle,onSelection,onSelectionLoaded){ //returns a function to be called on show
 		var map;
-		var mapClickListener=null;
-		var selectionHandle=null;
-		var preloaded=!!circle;
+		var mapClickListener;
+		var selectionHandle;
+		var preloaded;
 		
 		var displayHint=function(hint,isLoading){
 			var $hints=$map.find("p.hints");
@@ -75,11 +73,19 @@ pictorical= function(){
 			}
 		};
 		
+		var clearMap=function(){
+			if(!!circle){
+				circle.setMap(null);
+				circle=null;
+			}
+			if(!!mapClickListener){
+				google.maps.event.removeListener(mapClickListener);
+			}
+		};
+		
 		var cancelSelection=function(event){
 			cancelSelectionCallback();
-			circle.setMap(null);
-			circle=null;
-			google.maps.event.removeListener(mapClickListener);
+			clearMap();
 			acceptSelections();
 		};
 		
@@ -179,21 +185,37 @@ pictorical= function(){
 				displayHint("You can choose another circle.");
 				cancelSelection();
 			});
+		},
+		
+		goToCircle=function(){
+			map.setCenter(circle.getCenter());
+			map.fitBounds(circle.getBounds());
+		},
+		
+		loadSelection=function(selection){
+			drawCircleAt(selection.getCenter(),selection.getRadius());
+			acceptUpdates();
+			preloaded=true;
 		};
 		
 		drawStartingMap();
 		if(!circle){
 			acceptSelections();
 		} else {
-			drawCircleAt(circle.getCenter(),circle.getRadius());
-			acceptUpdates();
+			loadSelection(circle);
 		}
-		return function(){ 
-			google.maps.event.trigger(map, 'resize');
-			if(preloaded){
-				map.setCenter(circle.getCenter());
-				map.fitBounds(circle.getBounds());
-				preloaded=false;
+		return { 
+			redraw: function(){
+				google.maps.event.trigger(map, 'resize');
+				if(preloaded){
+					goToCircle();
+					preloaded=false;
+				}
+			},
+			
+			select: function(selection){
+				clearMap();
+				loadSelection(selection);
 			}
 		};
 	},
@@ -522,17 +544,26 @@ pictorical= function(){
 			var showMap=function(){
 				$("#slideshow").hide();
 				$("#map").show();
-				onMapDisplay();
+				mapDisplayTools.redraw();
 				if(window.location.hash.length){
 					window.location.hash="";
 				}
 			},
+			
+			mapDisplayTools={
+				redraw: function(){}
+			},
+			
+			displaySlideshow=null,
+			
+			loadedHash=null,
 			
 			showSlides=function(selection){
 				$("#map").hide();
 				$("#slideshow").show();
 				if(!!selection){
 					window.location.hash="slideshow:"+selection.center.lat()+","+selection.center.lng()+","+selection.radius;
+					loadedHash=window.location.hash;
 				}
 			},
 			
@@ -566,10 +597,14 @@ pictorical= function(){
 			
 			onHashChange=function(){
 				if(window.location.hash==="") showMap();
-				else showSlides();
+				else if (loadedHash===window.location.hash){
+					showSlides();
+				} else {
+					mapDisplayTools.select(routeHash());
+				}
 			},
 			
-			routeHash=function(displaySlideshow){
+			routeHash=function(){
 				var selection=hashToSlideshowSelection(window.location.hash);
 				if(!!selection){
 					displaySlideshow(selection,onSlidesLoaded);
@@ -580,15 +615,15 @@ pictorical= function(){
 			};
 			
 			return function(){
-				var displaySlideshow=slideshow($('#slideshow'),slideSources).display;
 				var selection=null;
+				displaySlideshow=slideshow($('#slideshow'),slideSources).display;
 				$(window).hashchange(onHashChange);
 				if("hash" in window.location && window.location.hash.length){
-					selection=routeHash(displaySlideshow);
+					selection=routeHash();
 				} else {
 					showMap();
 				}
-				onMapDisplay=makeScene($('#map'),selection,displaySlideshow,onSlidesLoaded);
+				mapDisplayTools=makeScene($('#map'),selection,displaySlideshow,onSlidesLoaded);
 			};
 		}();
 		
