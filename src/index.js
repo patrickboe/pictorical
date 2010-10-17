@@ -20,6 +20,7 @@ pictorical= function(){
 		var mapClickListener;
 		var selectionHandle;
 		var preloaded;
+		var geocoder;
 		
 		var displayHint=function(hint,isLoading){
 			var $hints=$map.find("p.hints");
@@ -36,19 +37,56 @@ pictorical= function(){
 		};
 		
 		var drawStartingMap=function(){
-			var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257);
-			var startOptions=
+			var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257),
+			geocoder=new google.maps.Geocoder();
+			startOptions=
 							{
 								zoom: 15,
 								center: HardenaRestaurant,
 								streetViewControl: false,
 								mapTypeControl: false,
 								mapTypeId: google.maps.MapTypeId.ROADMAP
+							},
+			pictoricalTitle=$map.find('header')[0],
+			searchnav=$map.find('nav')
+				.find('input').autocomplete({
+					select: function(event,ui){
+						var place=ui.item.value;
+						this.value=ui.item.label;
+						map.setCenter(place.location);
+						if(!!place.bounds){
+							map.fitBounds(place.bounds);
+						}
+						return false; //don't populate search box
+					},
+					focus: function(){
+						return false; //don't populate search box
+					},
+					source: function(request, response) {
+						var adaptGeocoderResult=function(gcresult){
+							return {
+								label: gcresult.formatted_address,
+								value: gcresult.geometry
+							};
+						}
+						var adaptGoogleResponse=function(gcresults,gcstatus){
+							var i;
+							if(gcstatus===google.maps.GeocoderStatus.OK){
+								for(i=0; i<gcresults.length; i++){
+									gcresults[i]=adaptGeocoderResult(gcresults[i]);
+								}
+								response(gcresults);
+							} else {
+								response([]);
 							}
-			var pictoricalTitle=$('header')[0];
-			var terms=$('footer').clone()[0];
+						}
+						geocoder.geocode({address:request.term},adaptGoogleResponse);
+					}
+				}).end()[0],
+			terms=$('footer').clone()[0];
 			map = new google.maps.Map($map[0],startOptions);
 			map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
+			map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchnav);
 			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
 		};
 		
@@ -612,10 +650,21 @@ pictorical= function(){
 				} else {
 					window.location="";
 				}
+			},
+			
+			modernize=function(){
+				// if placeholder isn't supported:
+			    if (!Modernizr.input.placeholder){
+			      $("input[placeholder]").before(function(){
+			    	  var labelMarkup='<label>'+$(this).attr('placeholder')+'</label>';
+			    	  return $(labelMarkup);
+			      });
+			    }
 			};
 			
 			return function(){
 				var selection=null;
+				modernize();
 				displaySlideshow=slideshow($('#slideshow'),slideSources).display;
 				$(window).hashchange(onHashChange);
 				if("hash" in window.location && window.location.hash.length){
