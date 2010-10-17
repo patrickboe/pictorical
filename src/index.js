@@ -306,7 +306,8 @@ pictorical= function(){
 						   timeout: 4000,
 						   prev:   '.prev', 
 						   next:   '.next',
-						   after:	adjustImageMap
+						   after:	adjustImageMap,
+						   requeueOnImageNotLoaded: false
 					});
 				}
 			});
