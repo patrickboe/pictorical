@@ -325,13 +325,24 @@ pictorical= function(){
 	},
 	
 	flickr = function(){
-		var parseDate= function (flickrDate){
+		var flickrBlacklist={},
+		
+		blacklistLoaded=false,
+		
+		onBlacklistLoaded=function(blacklist){
+			for (var i in blacklist){
+				flickrBlacklist[blacklist[i]]=1;
+			}
+			blacklistLoaded=true;
+		},
+		
+		parseDate= function (flickrDate){
 			var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
 			var dateParts=dateOnly.split("-");
 			return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
-		};
+		},
 		
-		var PhotoFactory= function(licenses){
+		PhotoFactory= function(licenses){
 			return function(rawPhoto){
 				var _date=parseDate(rawPhoto.datetaken), that={
 					getID: function(){return "flickr"+String(rawPhoto.id);},
@@ -339,6 +350,7 @@ pictorical= function(){
 					getDate: function(){return _date;},
 					getPage: function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id},
 					getOwnerUrl: function(){return "http://www.flickr.com/people/" + rawPhoto.owner;},
+					getOwnerID: function(){return rawPhoto.owner;},
 					getOwnerName: function(){return rawPhoto.ownername;},
 					getTitle: function(){return rawPhoto.title},
 					getLicenseSnippet: function(){return licenses[rawPhoto.license];},
@@ -347,9 +359,9 @@ pictorical= function(){
 				};
 				return that;
 			}
-		};
+		},
 		
-		var makeLicenseSnippet= function(license){
+		makeLicenseSnippet= function(license){
 			var snippet="";
 			if(license.url.search('creativecommons.org')>=0){
 				var type=license.url.match(/\/licenses\/(.*\/)/)[1];
@@ -359,6 +371,17 @@ pictorical= function(){
 			snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
 			return snippet;
 		};
+		
+		$.ajax({
+				url: 'blacklist',
+				cache: true,
+				dataType: 'jsonp',
+				jsonpCallback: 'loadFlickrBlacklist',
+				success: function(data){ onBlacklistLoaded(data); },
+				error:function(){
+					onBlacklistLoaded(["the loneliest pony"]);
+				}
+			});
 		
 		return {
 			createSource: function()
@@ -370,12 +393,27 @@ pictorical= function(){
 				var photosLoaded=function(photosFoundCallback){
 					var processPhotos=function(data){
 						var photos=[];
+						var i=0;
+						var curBlacklistMethod=onBlacklistLoaded;
 						if(licenses.length){
-							if(!!data.photos){
-								photos=data.photos.photo;
+							if(blacklistLoaded){
+								if(!!data.photos){
+									photos=data.photos.photo;
+								}
+								constructArray(photos,PhotoFactory(licenses));
+								for (i=0; i<photos.length; i++) {
+									if(flickrBlacklist[photos[i].getOwnerID()]){
+										photos.splice(i,1);
+										i--;
+									}
+								}
+								photosFoundCallback(photos)
+							} else {
+								onBlacklistLoaded=function(blacklist){
+									curOnBlacklistLoaded(blacklist)
+									processPhotos(data);
+								};
 							}
-							constructArray(photos,PhotoFactory(licenses));
-							photosFoundCallback(photos)
 						} else{
 							//we don't have license information yet. set this to run when we do.
 							licensesLoaded=function(){

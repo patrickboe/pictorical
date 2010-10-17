@@ -8,7 +8,7 @@ handlers:
   upload: index.html
   static_files: index.html
 
-- url: /blacklist/\w*
+- url: /blacklist.*
   script: blacklist/black.py
 
 - url: /(.*\.(css|js))

@@ -5,23 +5,18 @@
 		<title>PICTORICAL</title>
 	</head>
 	<body>
-		<h1>Blacklist Your Flickr User ID From Our Slideshows</h1>
-		{% if flickrUser %}
-        <h2>Flickr User {{ flickrUser.id }} has been blacklisted.</h2>
+		<h1>Blacklist Your Flickr Username From These Slideshows</h1>
+		{% if username %}
+        	<h2>"{{ username }}" has been blacklisted.</h2>
       	{% else %}
-      	{% if error %}
-      	<p class="error">{{ error }}</p>p>
-      	{% endif %}
-      	<ul>
-	    {% for user in blacklist %}
-	        <li>{{ user.date }} : {{ user.id|escape }}</li>
-	    {% endfor %}
-	    </ul>
-	    <form method="post">
-	      <label for="user">Flickr Username</label>
-	      <input type="text" name="user" size="30"/>
-	      <input type="submit" value="Add To Blacklist">
-	    </form>
+	      	{% if error %}
+	      		<p class="error">{{ error }}</p>
+	      	{% endif %}
+		    <form method="post">
+		      <label for="user">Flickr Username</label>
+		      <input type="text" name="user" size="30"/>
+		      <input type="submit" value="Add To Blacklist">
+		    </form>
 		{% endif %}
 	</body>
 </html>
