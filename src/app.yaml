@@ -5,11 +5,11 @@ api_version: 1
 
 handlers:
 - url: /
-  upload: index.html
-  static_files: index.html
+  upload: content/index.html
+  static_files: content/index.html
 
 - url: /blacklist.*
-  script: blacklist/black.py
+  script: python/blacklist.py
 
 - url: /(.*\.(css|js))
   expiration: "365d"
@@ -17,5 +17,5 @@ handlers:
   static_files: \1
  
 - url: /(\w+)/?
-  upload: .*\.html
-  static_files: \1.html
+  upload: content/.*\.html
+  static_files: content/\1.html

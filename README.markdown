@@ -1,0 +1,13 @@
+Pictorical Historical Photo Slides Application
+Copyright (c) 2010 Patrick Boe
+Version: 0.1 (09/27/2010)
+Dual licensed under the MIT and GPL licenses:
+http://www.opensource.org/licenses/mit-license.php
+http://www.gnu.org/licenses/gpl.html
+ 
+## Build
+You need [Hyde 0.4](http://github.com/lakshmivyas/hyde/tree/0.4) and its dependencies.
+ 
+## Deploy
+This project is currently structured as a Google App Engine project - for now, refer to http://code.google.com/appengine/ for deployment instructions. All the 
+source is in the src directory.
