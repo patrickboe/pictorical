@@ -657,7 +657,7 @@ pictorical= function(){
 				// if placeholder isn't supported:
 			    if (!Modernizr.input.placeholder){
 			      $("input[placeholder]").before(function(){
-			    	  var labelMarkup='<label>'+$(this).attr('placeholder')+'</label>';
+			    	  var labelMarkup='<label>'+$(this).attr('placeholder')+': </label>';
 			    	  return $(labelMarkup);
 			      });
 			    }
