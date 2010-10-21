@@ -1,12 +1,11 @@
-<!DOCTYPE html>
-<html lang="en" class="no-js">
-	<head>
-		<meta charset="utf-8" />
-		<title>PICTORICAL</title>
-		<link rel="stylesheet" media="screen" href="/media/css/index.css" type="text/css" />
-		<link type="text/css" href="/media/css/jquery-ui-1.8.5.custom.css" rel="stylesheet" />	
-	</head>
-	<body>
+{% extends "_page.html" %}
+{%hyde
+    title: "Make a Scene"
+%}
+	{% block head %}
+	<link type="text/css" href="/media/css/jquery-ui-1.8.5.custom.css" rel="stylesheet" />	
+	{% endblock %}
+	{% block content %}
 		<div id="map">
 			<header>
 				<h1>Pictorical</h1> 
@@ -39,5 +38,4 @@
 		<script type="text/javascript" src="/media/js/jquery.cycle.min.js"></script>
 		<script type="text/javascript" src="/media/js/jquery.ba-hashchange.min.js"></script>
 		<script type="text/javascript" src="/media/js/index.js"></script>
-	</body>
-</html>
+	{% endblock %}

@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<title>PICTORICAL: About</title>
-		<link rel="stylesheet" media="screen" href="index.css" type="text/css" />
-	</head>
+{% extends "_page.html" %}
+{%hyde
+    title: "About"
+%}
+{% block content %}
 	<body>		
 		<h1>About This Site</h1>
 		
@@ -68,5 +66,4 @@
 		is concerned, I'm not really taking any right now, because I haven't seen any hosting costs yet, I'm doing this for 
 		fun, and I don't want to chance violating the terms of the NonCommercial licenses applied to many of the photos on 
 		this site.</p>
-	</body>
-</html>
+{% endblock %}
