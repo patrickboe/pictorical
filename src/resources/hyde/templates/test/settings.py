@@ -1,21 +1,23 @@
 import os
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
-PROJ_PATH,wha = os.path.split(ROOT_PATH)
+
 #Directories
 LAYOUT_DIR = os.path.join(ROOT_PATH, 'layout')
 CONTENT_DIR = os.path.join(ROOT_PATH, 'content')
 MEDIA_DIR = os.path.join(ROOT_PATH, 'media')
-DEPLOY_DIR = os.path.join(PROJ_PATH, 'deploy')
-TMP_DIR = os.path.join(PROJ_PATH, 'deploy_tmp')
+DEPLOY_DIR = os.path.join(ROOT_PATH, 'deploy')
+TMP_DIR = os.path.join(ROOT_PATH, 'deploy_tmp')
 
 BACKUPS_DIR = os.path.join(ROOT_PATH, 'backups')
-BACKUP = False
+BACKUP = False                 
+
+BLOG_DIR = os.path.join(CONTENT_DIR,"blog")
 
 SITE_ROOT = "/"
-SITE_WWW_URL = "http://pictoricalmap.appspot.com"
-SITE_NAME = "Pictorical"
-SITE_AUTHOR = "Patrick Boe"
+SITE_WWW_URL = "http://www.yoursite.com"
+SITE_NAME = "Your Site"
+SITE_AUTHOR = "Your Name"
 
 #Url Configuration
 GENERATE_ABSOLUTE_FS_URLS = False
@@ -29,7 +31,7 @@ GENERATE_ABSOLUTE_FS_URLS = False
 # to map the clean urls to the actual html files.  The HtaccessGenerator site
 # post processor is capable of automatically generating the necessary
 # RewriteRules for use with Apache.
-GENERATE_CLEAN_URLS = True
+GENERATE_CLEAN_URLS = False
 
 # A list of filenames (without extensions) that will be considered listing
 # pages for their enclosing folders.
@@ -57,7 +59,7 @@ MEDIA_PROCESSORS = {
                 'hydeengine.media_processors.YUICompressor',),
         '.ccss':('hydeengine.media_processors.TemplateProcessor',
                 'hydeengine.media_processors.CleverCSS',
-                'hydeengine.media_processors.YUICompressor',),
+                'hydeengine.media_processors.YUICompressor',),  
         '.sass':('hydeengine.media_processors.TemplateProcessor',
                 'hydeengine.media_processors.SASS',
                 'hydeengine.media_processors.YUICompressor',),                
@@ -88,6 +90,22 @@ SITE_POST_PROCESSORS = {
     #                'pattern':"*.js"
     #        }
     #    }
+}                       
+
+SITE_PRE_PROCESSORS = {
+    'blog': {
+        'hydeengine.site_pre_processors.CategoriesManager' : {
+            'template': '_category.html',
+            'listing_template': '_categorylist.html'
+         }
+    },
+    '/': {
+        'hydeengine.site_pre_processors.NodeInjector' : {
+            'injections' : {
+                'blog_node' : 'content/blog',
+            }
+        }
+    }
 }
 
 CONTEXT = {
@@ -100,7 +118,7 @@ FILTER = {
 }        
 
 
-#Processor Configuration 
+#Processor Configuration  
 
 # 
 #  Set this to the output of `which growlnotify`. If `which`  returns emtpy,
@@ -108,6 +126,7 @@ FILTER = {
 # 
 #
 GROWL = None
+
 
 # path for YUICompressor, or None if you don't
 # want to compress JS/CSS. Project homepage:
