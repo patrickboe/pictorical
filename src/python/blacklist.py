@@ -62,10 +62,10 @@ class Registration(webapp.RequestHandler):
             self.__show({'error':'Flickr says there is no such user.'})
     
     def __show(self,templateValues):
-        path = os.path.join(os.path.split(os.path.dirname(__file__)), 'content/_blacklist.html')
+        path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'blacklist.djml')
         self.response.out.write(template.render(path, templateValues))
 
-application = webapp.WSGIApplication([('/blacklist/add', Registration),('/blacklist', List)], debug=True)
+application = webapp.WSGIApplication([('/blacklist/add', Registration),('/blacklist', List)], debug=True) 
 
 def main():
     run_wsgi_app(application)

@@ -5,8 +5,8 @@ api_version: 1
 
 handlers:
 - url: /
-  upload: content/index.html
-  static_files: content/index.html
+  upload: index.html
+  static_files: index.html
 
 - url: /blacklist.*
   script: python/blacklist.py
@@ -17,5 +17,5 @@ handlers:
   static_files: \1
  
 - url: /(\w+)/?
-  upload: content/.*\.html
-  static_files: content/\1.html
+  upload: .*\.html
+  static_files: \1.html

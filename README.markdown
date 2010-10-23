@@ -6,7 +6,14 @@ http://www.opensource.org/licenses/mit-license.php
 http://www.gnu.org/licenses/gpl.html
  
 ## Build
-You need [Hyde 0.4](http://github.com/lakshmivyas/hyde/tree/0.4) and its dependencies.
+You need Paver, django, pyYAML, and markdown: 
+sudo easy_install Paver
+sudo easy_install django
+sudo easy_install pyYAML
+sudo easy_install markdown
+
+then:
+Run ${project_loc}/src/resources/hyde/hyde.py -g -s ${project_loc}/src/build
  
 ## Deploy
 This project is currently structured as a Google App Engine project - for now, refer to http://code.google.com/appengine/ for deployment instructions. All the 

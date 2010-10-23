@@ -75,9 +75,9 @@ MEDIA_PROCESSORS = {
     } 
 }
 
-CONTENT_PROCESSORS = {
-    'prerendered/': {
-        '*.*' : 
+CONTENT_PROCESSORS = {  
+    '*': {
+        '*.djml' : 
             ('hydeengine.content_processors.PassthroughProcessor',)
             }
 }

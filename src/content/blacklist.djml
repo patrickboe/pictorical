@@ -5,7 +5,7 @@
 		<title>PICTORICAL</title>
 	</head>
 	<body>
-		<h1>Blacklist Your Flickr Username From These Slideshows</h1>
+		<h1>{{ test }} Blacklist Your Flickr Username From These Slideshows</h1>
 		{% if username %}
         	<h2>"{{ username }}" has been blacklisted.</h2>
       	{% else %}
