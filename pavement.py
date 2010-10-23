@@ -3,22 +3,48 @@ import paver.doctools
 
 options(
         env=Bunch(
-                  localAppEngine="/opt/google/appengine/"
+                  appEngine="/opt/google/appengine",
+                  python="python2.5"
                   )
         )
 
+def combine(mediaPath, in_files, out_file, in_type='js'):
+    "combine text files into one"
+    out = open(mediaPath / ('%s.%s' % (out_file,in_type)), 'w')
+    for f in in_files:
+        f=mediaPath / ('%s.%s'%(f,in_type))
+        fh = open(f)
+        data = fh.read() + '\n'
+        fh.close()
+        f.remove()
+        out.write(data)
+        print ' + %s' % f
+    out.close()
+
+deploy = path("deploy")
+src = path("src")
+
 @task
 def build():
-    destDir = path("deploy")
-    src = path("src")
+    "transform source code into a deployable google app"
     hyde = src / "resources" / "hyde" / "hyde.py"
     buildDir = src / "build"
-    destDir.rmtree()
-    (src / "python").copytree(destDir / "python")
-    (src / "app.yaml").copy(destDir / "app.yaml")
+    deploy.rmtree()
+    (src / "python").copytree(deploy / "python")
+    (src / "layout").copytree(deploy / "layout")
+    (src / "app.yaml").copy(deploy / "app.yaml")
     sh("%s -g -s %s" % (hyde, buildDir))
+    combine(deploy/"media"/"js",
+            [
+             'index',
+             'jquery.ba-hashchange.min',
+             'jquery.cycle.min',
+             'jquery-ui-1.8.5.custom.min',
+             'modernizr-1.5.min'
+             ],'app')
     
-"""@task
+@task
 @needs('build')
 def localdeploy():
-    sh()"""
+    "start local google app engine server for this app"
+    sh("%s %s %s" % (options.env.python, path(options.env.appEngine) / "dev_appserver.py", deploy.abspath()))

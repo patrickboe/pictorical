@@ -11,10 +11,10 @@ handlers:
 - url: /blacklist.*
   script: python/blacklist.py
 
-- url: /(.*\.(css|js))
+- url: /media/(.*)
   expiration: "365d"
-  upload: .*\.(css|js)
-  static_files: \1
+  upload: media/.*
+  static_files: media/\1
  
 - url: /(\w+)/?
   upload: .*\.html

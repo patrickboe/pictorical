@@ -1,4 +1,5 @@
 import os
+import sys
 import urllib
 
 from google.appengine.ext.webapp import template
@@ -63,6 +64,7 @@ class Registration(webapp.RequestHandler):
     
     def __show(self,templateValues):
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'blacklist.djml')
+        sys.stderr.write(os.path.dirname(os.path.abspath(path)));
         self.response.out.write(template.render(path, templateValues))
 
 application = webapp.WSGIApplication([('/blacklist/add', Registration),('/blacklist', List)], debug=True) 

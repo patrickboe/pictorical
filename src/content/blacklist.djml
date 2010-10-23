@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<title>PICTORICAL</title>
-	</head>
-	<body>
+{% extends "layout/_root.html" %}
+{% block content %}
 		<h1>{{ test }} Blacklist Your Flickr Username From These Slideshows</h1>
 		{% if username %}
         	<h2>"{{ username }}" has been blacklisted.</h2>
@@ -22,5 +17,4 @@
 		      <input type="submit" value="Add To Blacklist">
 		    </form>
 		{% endif %}
-	</body>
-</html>
+{% endblock %}
