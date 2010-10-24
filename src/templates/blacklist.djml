@@ -1,4 +1,4 @@
-{% extends "layout/_root.html" %}
+{% extends "_page.djml" %}
 {% block content %}
 		<h1>{{ test }} Blacklist Your Flickr Username From These Slideshows</h1>
 		{% if username %}

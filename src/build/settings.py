@@ -4,7 +4,7 @@ ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 SRC_DIR = os.path.dirname(ROOT_PATH)
 PROJ_PATH = os.path.dirname(SRC_DIR)
 #Directories
-LAYOUT_DIR = os.path.join(SRC_DIR, 'layout')
+LAYOUT_DIR = os.path.join(SRC_DIR, 'templates')
 CONTENT_DIR = os.path.join(SRC_DIR, 'content')
 MEDIA_DIR = os.path.join(SRC_DIR, 'media')
 DEPLOY_DIR = os.path.join(PROJ_PATH, 'deploy')

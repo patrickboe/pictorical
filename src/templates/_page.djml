@@ -1,5 +1,4 @@
-{% extends "_root.html" %}
-{% block all %}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="no-js">
 	<head>
 		<meta charset="utf-8" />
@@ -13,4 +12,3 @@
 	{% endblock %}
 	</body>
 </html>
-{% endblock %}

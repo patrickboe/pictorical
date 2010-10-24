@@ -31,7 +31,7 @@ def build():
     buildDir = src / "build"
     deploy.rmtree()
     (src / "python").copytree(deploy / "python")
-    (src / "layout").copytree(deploy / "layout")
+    (src / "templates").copytree(deploy / "templates")
     (src / "app.yaml").copy(deploy / "app.yaml")
     sh("%s -g -s %s" % (hyde, buildDir))
     combine(deploy/"media"/"js",
