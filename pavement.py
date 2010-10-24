@@ -3,8 +3,8 @@ import paver.doctools
 
 options(
         env=Bunch(
-                  appEngine="/opt/google/appengine",
-                  python="python2.5"
+                  appEngine="/opt/google/appengine", #location of your local app engine scripts
+                  appEnginePython="python2.5" #name of a python exe that will work with app engine
                   )
         )
 
@@ -21,7 +21,7 @@ def combine(mediaPath, in_files, out_file, in_type='js'):
         print ' + %s' % f
     out.close()
 
-deploy = path("deploy")
+deployDir = path("deploy")
 src = path("src")
 
 @task
@@ -29,12 +29,12 @@ def build():
     "transform source code into a deployable google app"
     hyde = src / "resources" / "hyde" / "hyde.py"
     buildDir = src / "build"
-    deploy.rmtree()
-    (src / "python").copytree(deploy / "python")
-    (src / "templates").copytree(deploy / "templates")
-    (src / "app.yaml").copy(deploy / "app.yaml")
+    deployDir.rmtree()
+    (src / "python").copytree(deployDir / "python")
+    (src / "templates").copytree(deployDir / "templates")
+    (src / "app.yaml").copy(deployDir / "app.yaml")
     sh("%s -g -s %s" % (hyde, buildDir))
-    combine(deploy/"media"/"js",
+    combine(deployDir/"media"/"js",
             [
              'index',
              'jquery.ba-hashchange.min',
@@ -45,6 +45,12 @@ def build():
     
 @task
 @needs('build')
-def localdeploy():
+def run():
     "start local google app engine server for this app"
-    sh("%s %s %s" % (options.env.python, path(options.env.appEngine) / "dev_appserver.py", deploy.abspath()))
+    sh("%s %s %s" % (options.env.appEnginePython, path(options.env.appEngine) / "dev_appserver.py", deployDir.abspath()))
+    
+@task
+@needs('build')
+def deploy():
+    "put the current application live"
+    sh("%s %s update %s" % (options.env.appEnginePython, path(options.env.appEngine) / "appcfg.py", deployDir.abspath()))

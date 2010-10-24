@@ -1,0 +1,4 @@
+Paver
+django
+pyYAML
+markdown

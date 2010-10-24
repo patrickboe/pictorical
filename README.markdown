@@ -5,16 +5,17 @@ Dual licensed under the MIT and GPL licenses:
 http://www.opensource.org/licenses/mit-license.php
 http://www.gnu.org/licenses/gpl.html
  
+## Install Requirements
+You need Paver, django, pyYAML, and markdown. To install them all, run:
+	pip install -r requirements.txt
+You also need to install the google app engine sdk.
+ 
 ## Build
-You need Paver, django, pyYAML, and markdown: 
-sudo easy_install Paver
-sudo easy_install django
-sudo easy_install pyYAML
-sudo easy_install markdown
-
-then:
-Run ${project_loc}/src/resources/hyde/hyde.py -g -s ${project_loc}/src/build
+	paver build
+	
+## Run
+Edit options.env in the pavement.py to point to your local google app engine. Then to start the app, run:
+	paver run
  
 ## Deploy
-This project is currently structured as a Google App Engine project - for now, refer to http://code.google.com/appengine/ for deployment instructions. All the 
-source is in the src directory.
+	paver deploy
