@@ -1,4 +1,5 @@
 import os
+import yaml
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 SRC_DIR = os.path.dirname(ROOT_PATH)
@@ -14,9 +15,8 @@ BACKUPS_DIR = os.path.join(ROOT_PATH, 'backups')
 BACKUP = False
 
 SITE_ROOT = "/"
-SITE_WWW_URL = "http://pictoricalmap.appspot.com"
-SITE_NAME = "Pictorical"
-SITE_AUTHOR = "Patrick Boe"
+with open('my.yaml','r') as myYaml:
+    SITE_NAME=yaml.load(myYaml)["site_name"]
 
 #Url Configuration
 GENERATE_ABSOLUTE_FS_URLS = False
