@@ -23,7 +23,7 @@ def appEngineCommand(pyname):
 def auto(): 
     "runs on every paver call"
     loadConf(options)     
-    options.version_name=options.version.replace(".","-") + (options.debug and "-dev" or "-rel")
+    options.version_name=options.version.replace(".","-") + (options.debug and "-dev" or "")
 
 @task
 def build():
