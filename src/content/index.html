@@ -4,12 +4,11 @@
 %}
 	{% block head %}
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-	<link type="text/css" href="/media/css/jquery-ui-1.8.5.custom.css" rel="stylesheet" />	
 	{% endblock %}
 	{% block content %}
 		<div id="map">
 			<header>
-				<h1>Pictorical</h1> 
+				<h1>$CONF_site_name</h1> 
 				<p class="hints">Click to choose a slideshow area. Try your street corner.</p>
 			</header>
 			<nav>
@@ -17,7 +16,7 @@
 			</nav>
 		</div>
 		<div id="slideshow">
-			<header><h1>Pictorical</h1></header>
+			<header><h1>$CONF_site_name</h1></header>
 			<nav>
 				<a class="back" href="#">Back To Map</a>
 				<a class="pause" href="#pause">Pause</a>
@@ -28,11 +27,12 @@
 			<footer>
 				<span class="copyright">Website &copy;2010 Patrick Boe</span>
 				<a href="about" class="about" title="About This Site">About</a>
-				<a href="terms" class="terms" title="Pictorical Terms of Use and Privacy Policy">Terms of Use, Privacy</a>
+				<a href="terms" class="terms" title="$CONF_site_name Terms of Use and Privacy Policy">Terms of Use, Privacy</a>
 				<a href="http://github.com/patrickboe/pictorical" class="source">Source Code</a>
 			</footer>
 		</div>
 		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js?key=ABQIAAAABYlRyNYUhba29cQamRPQKBR8ulp0qGQo-uK4cerJzxtvcpEfYhQUvUPW8MsKBdPRILeaaD87k6iEfw"></script>
-		<script type="text/javascript" src="/media/js/app.js"></script>
+		<script type="text/javascript" src="https://www.google.com/jsapi?key=$CONF_google_api_key"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+		<script type="text/javascript" src="/media/js/app-$CONF_version_name.js"></script>
 	{% endblock %}

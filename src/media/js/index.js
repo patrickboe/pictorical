@@ -1,7 +1,7 @@
 /*!
  * Pictorical Historical Photo Slides Application
  * Copyright (c) 2010 Patrick Boe
- * Version: 0.1 (09/27/2010)
+ * Version: $CONF_version ($CONF_version_date)
  * Dual licensed under the MIT and GPL licenses:
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.gnu.org/licenses/gpl.html
@@ -92,6 +92,9 @@ pictorical= function(){
 		
 		var drawCircleAt=function(location,radius) {
 		  var clickedLocation = new google.maps.LatLng(location);
+		  if(typeof radius === 'undefined'){
+			  radius=100;
+		  }
 		  circle = new google.maps.Circle({
 			  center: location, 
 			  map: map,
@@ -448,7 +451,7 @@ pictorical= function(){
 			createSource: function()
 			{
 				var apiUrl="http://api.flickr.com/services/rest/?jsoncallback=?";
-				var apiKey='5c047b2b54845211d9662958d1cc5b9d';
+				var apiKey='$CONF_flickr_api_key';
 				var licenses=[];
 				var licensesLoaded=function(){};
 				var photosLoaded=function(photosFoundCallback){
@@ -655,7 +658,7 @@ pictorical= function(){
 			
 			modernize=function(){
 				// if placeholder isn't supported:
-			    if (!Modernizr.input.placeholder){
+			    if (typeof Modernizr !== 'undefined' && !Modernizr.input.placeholder){
 			      $("input[placeholder]").before(function(){
 			    	  var labelMarkup='<label>'+$(this).attr('placeholder')+': </label>';
 			    	  return $(labelMarkup);

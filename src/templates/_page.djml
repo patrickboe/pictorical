@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>{{site.name}} : {{page.title}}</title>
-		<link rel="stylesheet" media="screen" href="/media/css/index.css" type="text/css" />
+		<link type="text/css" href="/media/css/app-$CONF_version_name.css" rel="stylesheet" />	
 		{% block head %}
 		{% endblock %}
 	</head>

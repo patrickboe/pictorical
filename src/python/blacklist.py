@@ -27,11 +27,10 @@ class Registration(webapp.RequestHandler):
         self.__show({})
         
     def post(self):
-        #TODO: de-duplicate api key
         def askForID(username): 
             restParams={
                         "method": "flickr.people.findByUsername",
-                        "api_key": "5c047b2b54845211d9662958d1cc5b9d",
+                        "api_key": "$CONF_flickr_api_key",
                         "username": username
                         }
             try: 
@@ -62,10 +61,11 @@ class Registration(webapp.RequestHandler):
             self.__show({'error':'Flickr says there is no such user.'})
     
     def __show(self,templateValues):
+        templateValues.update({"site":{"name":"$CONF_site_name"},"page":{"title":"Blacklist"}})
         path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates'),'blacklist.djml')
         self.response.out.write(template.render(path, templateValues))
-
-application = webapp.WSGIApplication([('/blacklist/add', Registration),('/blacklist', List)], debug=True) 
+        
+application = webapp.WSGIApplication([('/blacklist/add', Registration),('/blacklist', List)], debug=$CONF_debug) 
 
 def main():
     run_wsgi_app(application)
