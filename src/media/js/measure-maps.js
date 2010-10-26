@@ -22,7 +22,7 @@ google.maps.LatLng.prototype.distanceTo=
  */
 function(point, precision) {
   // default 4 sig fig reflects typical 0.3% accuracy of spherical model
-  if (typeof precision === 'undefined') precision = 4;  
+  if (typeof precision === 'undefined') {precision = 4;}  
   
   var R = 6371;
   var lat1 = this.lat().toRad(), lon1 = this.lng().toRad();
@@ -36,7 +36,7 @@ function(point, precision) {
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   var d = R * c * 1000;
   return d.toFixed(precision);
-}
+};
 
 /**
  * Returns the (initial) bearing from this point to the supplied point, in degrees
@@ -55,7 +55,7 @@ google.maps.LatLng.prototype.bearingTo = function(point) {
   var brng = Math.atan2(y, x);
   
   return (brng.toDeg()+360) % 360;
-}
+};
 
 /**
  * Returns the destination point from this point having travelled the given distance (in km) on the 
@@ -78,9 +78,9 @@ google.maps.LatLng.prototype.destinationPoint = function(brng, dist) {
                                Math.cos(dist)-Math.sin(lat1)*Math.sin(lat2));
   lon2 = (lon2+3*Math.PI)%(2*Math.PI) - Math.PI;  // normalise to -180...+180
 
-  if (isNaN(lat2) || isNaN(lon2)) return null;
+  if (isNaN(lat2) || isNaN(lon2)) {return null;}
   return new google.maps.LatLng(lat2.toDeg(), lon2.toDeg());
-}
+};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
@@ -90,12 +90,12 @@ google.maps.LatLng.prototype.destinationPoint = function(brng, dist) {
 if (typeof(Number.prototype.toRad) === "undefined") {
 	Number.prototype.toRad = function() {
 	 return this * Math.PI / 180;
-	}
+	};
 }
 
 /** Convert radians to numeric (signed) degrees */
 if (typeof(Number.prototype.toDeg) === "undefined") {
 	Number.prototype.toDeg = function() {
 	 return this * 180 / Math.PI;
-	}
+	};
 }

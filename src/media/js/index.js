@@ -12,7 +12,9 @@ pictorical= function(){
 	},
 
 	constructArray = function(arr,constructor){
-		for (var i in arr) arr[i]=new constructor(arr[i]);
+		for (var i=0; i<arr.length; i++) {
+			arr[i]=new constructor(arr[i]);
+		}
 	},
 	
 	makeScene=function($map,circle,onSelection,onSelectionLoaded){ //returns a function to be called on show
@@ -38,7 +40,7 @@ pictorical= function(){
 		
 		var drawStartingMap=function(){
 			var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257),
-			geocoder=new google.maps.Geocoder();
+			geocoder=new google.maps.Geocoder(),
 			startOptions=
 							{
 								zoom: 15,
@@ -68,7 +70,7 @@ pictorical= function(){
 								label: gcresult.formatted_address,
 								value: gcresult.geometry
 							};
-						}
+						};
 						var adaptGoogleResponse=function(gcresults,gcstatus){
 							var i;
 							if(gcstatus===google.maps.GeocoderStatus.OK){
@@ -79,7 +81,7 @@ pictorical= function(){
 							} else {
 								response([]);
 							}
-						}
+						};
 						geocoder.geocode({address:request.term},adaptGoogleResponse);
 					}
 				}).end()[0],
@@ -93,17 +95,17 @@ pictorical= function(){
 		var drawCircleAt=function(location,radius) {
 		  var clickedLocation = new google.maps.LatLng(location);
 		  if(typeof radius === 'undefined'){
-			  radius=100;
+			  radius=50;
 		  }
 		  circle = new google.maps.Circle({
 			  center: location, 
 			  map: map,
 			  radius: radius,
 			  fillColor: "#FF0000",
-		  	  fillOpacity: 0.3,
-		  	  strokeColor: "#FF0000",
-		  	  strokeOpacity: 0.8,
-		  	  strokeWeight: 3
+			  fillOpacity: 0.3,
+			  strokeColor: "#FF0000",
+			  strokeOpacity: 0.8,
+			  strokeWeight: 3
 		  });
 		};
 		
@@ -179,7 +181,7 @@ pictorical= function(){
 			leaveEvents=["mouseout","mouseup"],
 			
 			addCircleBehavior=function(eventNames,action){
-				for(var i in eventNames){
+				for(var i=0;i<eventNames.length;i++){
 					circleFocusListeners.push(google.maps.event.addListener(circle,eventNames[i],action));
 				}
 			},
@@ -276,9 +278,9 @@ pictorical= function(){
 				   prevRect="0,0,"+prevRightEdge+","+h,
 				   nextRect=nextLeftEdge+",0,"+w+","+h;
 				   $this
-				   	.find("area.prev").attr("coords",prevRect)
-				   		.end()
-				   	.find("area.next").attr("coords",nextRect);
+				   .find("area.prev").attr("coords",prevRect)
+				   .end()
+				   .find("area.next").attr("coords",nextRect);
 			   };
 			
 			var loadPhoto=function(photo){
@@ -298,7 +300,7 @@ pictorical= function(){
 			}
 			$slides.cycle('destroy').empty();
 			//add photos to the DOM
-			for(var i in photos){
+			for(var i=0;i<photos.length;i++){
 				loadPhoto(photos[i]);
 			}
 			//set the images to cycle once the first one loads
@@ -342,7 +344,7 @@ pictorical= function(){
 				
 				var displayAllPhotos=function(){
 					allPhotos.sort(function(a,b){
-						if(a.getDate() > b.getDate()) return 1;
+						if(a.getDate() > b.getDate()) {return 1;}
 						return -1;
 					});
 					loadSlides(allPhotos,function(hasPhotos){
@@ -370,8 +372,8 @@ pictorical= function(){
 							displayAllPhotos();
 						}
 					}
-				}
-				for(var i in sources){
+				};
+				for(var i=0;i<sources.length;i++){
 					makeRequest(sources[i]);
 				}
 				timeoutID=window.setTimeout(function(){
@@ -383,7 +385,7 @@ pictorical= function(){
 						cancelTimeout();
 						cancelled=true;
 					}
-				}
+				};
 			}
 		};
 	},
@@ -394,7 +396,7 @@ pictorical= function(){
 		blacklistLoaded=false,
 		
 		onBlacklistLoaded=function(blacklist){
-			for (var i in blacklist){
+			for (var i=0;i<blacklist.length;i++){
 				flickrBlacklist[blacklist[i]]=1;
 			}
 			blacklistLoaded=true;
@@ -412,17 +414,17 @@ pictorical= function(){
 					getID: function(){return "flickr"+String(rawPhoto.id);},
 					getUrl: function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";},
 					getDate: function(){return _date;},
-					getPage: function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id},
+					getPage: function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id;},
 					getOwnerUrl: function(){return "http://www.flickr.com/people/" + rawPhoto.owner;},
 					getOwnerID: function(){return rawPhoto.owner;},
 					getOwnerName: function(){return rawPhoto.ownername;},
-					getTitle: function(){return rawPhoto.title},
+					getTitle: function(){return rawPhoto.title;},
 					getLicenseSnippet: function(){return licenses[rawPhoto.license];},
-					getApiCredit: function(){return ""},
-					getRaw: function(){return JSON.stringify(rawPhoto);},
+					getApiCredit: function(){return "";},
+					getRaw: function(){return JSON.stringify(rawPhoto);}
 				};
 				return that;
-			}
+			};
 		},
 		
 		makeLicenseSnippet= function(license){
@@ -430,7 +432,7 @@ pictorical= function(){
 			if(license.url.search('creativecommons.org')>=0){
 				var type=license.url.match(/\/licenses\/(.*\/)/)[1];
 				snippet='<a rel="license" href="'+license.url+'" title="'+license.name+'">'+
-					'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'80x15.png"/></a>'
+					'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'80x15.png"/></a>';
 			} 
 			snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
 			return snippet;
@@ -458,7 +460,6 @@ pictorical= function(){
 					var processPhotos=function(data){
 						var photos=[];
 						var i=0;
-						var curBlacklistMethod=onBlacklistLoaded;
 						if(licenses.length){
 							if(blacklistLoaded){
 								if(!!data.photos){
@@ -471,10 +472,10 @@ pictorical= function(){
 										i--;
 									}
 								}
-								photosFoundCallback(photos)
+								photosFoundCallback(photos);
 							} else {
 								onBlacklistLoaded=function(blacklist){
-									curOnBlacklistLoaded(blacklist)
+									curOnBlacklistLoaded(blacklist);
 									processPhotos(data);
 								};
 							}
@@ -492,15 +493,15 @@ pictorical= function(){
 						{
 							method: 'flickr.photos.licenses.getInfo',
 							format: 'json',
-							api_key: apiKey,
+							api_key: apiKey
 						},
 						function(data){
 							if(!!data.licenses.license){
 								licenses=data.licenses.license;
 								licenses.sort(function(a,b){
-									return a.id>b.id
+									return a.id>b.id;
 								});
-								for (var i in licenses) licenses[i]=makeLicenseSnippet(licenses[i]);
+								for (var i=0;i<licenses.length;i++) {licenses[i]=makeLicenseSnippet(licenses[i]);}
 								licensesLoaded();
 							}
 						});
@@ -625,10 +626,10 @@ pictorical= function(){
 						  map: null,
 						  radius: Number(parts[2]),
 						  fillColor: "#FF0000",
-					  	  fillOpacity: 0.3,
-					  	  strokeColor: "#FF0000",
-					  	  strokeOpacity: 0.8,
-					  	  strokeWeight: 3
+						  fillOpacity: 0.3,
+						  strokeColor: "#FF0000",
+						  strokeOpacity: 0.8,
+						  strokeWeight: 3
 					});
 				} else {
 					return null;
@@ -638,7 +639,7 @@ pictorical= function(){
 			slideSources=[flickr.createSource(),panoramio.requestPhotos],
 			
 			onHashChange=function(){
-				if(window.location.hash==="") showMap();
+				if(window.location.hash==="") {showMap();}
 				else if (loadedHash===window.location.hash){
 					showSlides();
 				} else {
@@ -658,12 +659,12 @@ pictorical= function(){
 			
 			modernize=function(){
 				// if placeholder isn't supported:
-			    if (typeof Modernizr !== 'undefined' && !Modernizr.input.placeholder){
-			      $("input[placeholder]").before(function(){
-			    	  var labelMarkup='<label>'+$(this).attr('placeholder')+': </label>';
-			    	  return $(labelMarkup);
-			      });
-			    }
+				if (typeof Modernizr !== 'undefined' && !Modernizr.input.placeholder){
+					$("input[placeholder]").before(function(){
+						var labelMarkup='<label>'+$(this).attr('placeholder')+': </label>';
+						return $(labelMarkup);
+					});
+				}
 			};
 			
 			return function(){
