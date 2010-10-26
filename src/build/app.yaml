@@ -1,5 +1,5 @@
-application: $app_engine_application
-version: 0-1-dev
+application: $CONF_app_engine_application
+version: $CONF_version_name
 runtime: python
 api_version: 1
 

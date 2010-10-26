@@ -1,9 +1,0 @@
-debug: {
- minify javascript: no,
- debug: yes
-}
-
-release: {
- minify javascript: yes,
- debug: no
-}

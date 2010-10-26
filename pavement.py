@@ -1,13 +1,15 @@
 from paver.easy import *
-import paver.doctools
-import yaml
-import sys
 import string
 import re
+import sys
 
-config={"version": "0.1"}
 deployDir = path("deploy")
-src = path("src")
+srcDir = path("src")
+buildDir = srcDir / "build"
+sys.path.append(buildDir.abspath())
+from buildconfig import loadConf
+
+options(version="0.1")
 
 def appEngineCommand(pyname):
     return (options.app_engine_python_executable, 
@@ -16,11 +18,7 @@ def appEngineCommand(pyname):
 
 @task 
 def auto():   
-    with open('my.yaml','r') as myYaml:
-        config.update(yaml.load(myYaml))
-    with open(src/"configs.yaml","r") as confYaml:
-        config.update(yaml.load(confYaml)[config["configuration"]])
-    options.update(config);
+    loadConf(options)
 
 @task
 def build():
@@ -35,23 +33,26 @@ def build():
             out.write(data)
             print ' + %s' % f
         out.close()
-    def configure(templatedPath):
-        for f in [a for a in templatedPath.files() if re.search("\.(yaml|js|html|djml|css)$",a)]:
-            with open(f,'r') as fh:
-                subbed=string.Template(fh.read()).safe_substitute(config)
-            with open(f,'w') as fh:
-                fh.write(subbed)
-        for d in templatedPath.dirs():
-            configure(d)
+    def configure():
+        def applyConfig(curPath):
+            for f in [a for a in curPath.files() if re.search("\.(yaml|js|html|djml|css)$",a)]:
+                with open(f,'r') as fh:
+                    subbed=string.Template(fh.read()).safe_substitute(config)
+                with open(f,'w') as fh:
+                    fh.write(subbed)
+            for d in curPath.dirs():
+                applyConfig(d)
+        config=dict([("CONF_%s" % k,v) for (k,v) in options.iteritems()])
+        config["CONF_version_name"] =  options.version.replace(".","-") + (options.debug and "-dev" or "-rel")
+        applyConfig(deployDir)
     "transform source code into a deployable google app"
-    hyde = src / "resources" / "hyde" / "hyde.py"
-    buildDir = src / "build"
+    hyde = srcDir / "resources" / "hyde" / "hyde.py"
     deployDir.rmtree()
-    (src / "python").copytree(deployDir / "python")
-    (src / "templates").copytree(deployDir / "templates")
-    (src / "app.yaml").copy(deployDir / "app.yaml")
+    (srcDir / "python").copytree(deployDir / "python")
+    (srcDir / "templates").copytree(deployDir / "templates")
+    (buildDir / "app.yaml").copy(deployDir / "app.yaml")
     sh("%s -g -s %s" % (hyde, buildDir))
-    configure(deployDir)
+    configure()
     combine(deployDir/"media"/"js",
             [
              'index',

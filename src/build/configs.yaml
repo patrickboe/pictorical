@@ -1,0 +1,9 @@
+debug: {
+ minify_javascript: no,
+ debug: yes
+}
+
+release: {
+ minify_javascript: yes,
+ debug: no
+}

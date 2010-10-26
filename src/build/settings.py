@@ -1,6 +1,10 @@
 import os
-import yaml
+import sys
+sys.path.append(os.path.dirname(__file__))
+from buildconfig import loadConf
 
+config={}
+loadConf(config)
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 SRC_DIR = os.path.dirname(ROOT_PATH)
 PROJ_PATH = os.path.dirname(SRC_DIR)
@@ -15,8 +19,7 @@ BACKUPS_DIR = os.path.join(ROOT_PATH, 'backups')
 BACKUP = False
 
 SITE_ROOT = "/"
-with open('my.yaml','r') as myYaml:
-    SITE_NAME=yaml.load(myYaml)["site_name"]
+SITE_NAME=config["site_name"]
 
 #Url Configuration
 GENERATE_ABSOLUTE_FS_URLS = False
@@ -113,8 +116,7 @@ GROWL = None
 # path for YUICompressor, or None if you don't
 # want to compress JS/CSS. Project homepage:
 # http://developer.yahoo.com/yui/compressor/
-#YUI_COMPRESSOR = "./lib/yuicompressor-2.4.1.jar"
-YUI_COMPRESSOR = None 
+YUI_COMPRESSOR = config["minify_javascript"] and "./lib/yuicompressor-2.4.1.jar" or None
 
 # path for HSS, which is a preprocessor for CSS-like files (*.hss)
 # project page at http://ncannasse.fr/projects/hss
