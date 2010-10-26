@@ -63,6 +63,7 @@ def build():
     combineName='app-%s' % options.version_name
     combine(mediaDir/"js",
             [
+             'jquery-1.4.3.min',
              'index',
              'measure-maps',
              'jquery.ba-hashchange.min',
