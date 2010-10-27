@@ -1,6 +1,6 @@
 app_engine_application: pictoricalmap
 configuration: 
- #uncomment one:
+ #Uncomment one. Configs are defined in configs.yaml.
  debug
  #release
 site_name: Pictorical

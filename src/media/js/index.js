@@ -289,9 +289,9 @@ pictorical= function(){
 				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous"/>'+
 				'<area shape="rect" class="next" coords="50,0,90,40" href="#next" title="Advance to Next Photo" alt="Next"/>'+
 				'</map>'+
-				'<a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
+				'<footer><a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
 				'<label>'+photo.getDate().toLocaleDateString()+'</label>'+
-				photo.getLicenseSnippet()+photo.getApiCredit()+
+				photo.getLicenseSnippet()+photo.getApiCredit()+'</footer>'+
 		'</li>');
 			};
 			if(!photos.length){
@@ -314,8 +314,18 @@ pictorical= function(){
 						   after:	adjustImageMap,
 						   requeueOnImageNotLoaded: false
 					});
+					sizeSlideshow();
+					$(window)
+						.unbind('resize',sizeSlideshow) //make sure we don't bind this multiple times
+						.resize(sizeSlideshow);
 				}
 			});
+		},
+		
+		sizeSlideshow=function(){
+			var $ul=$container.find('ul.slideshow:visible');
+			var availHeight=String($('body').height()-$ul.offset().top*2) + "px";
+			$ul.css("height",availHeight);
 		},
 		
 		start=function(){
