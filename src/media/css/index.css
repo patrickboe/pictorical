@@ -1,71 +1,189 @@
-/* thanks, eric meyer! */
-/* v1.0 | 20080212 */
+/* 
+html5doctor.com Reset Stylesheet
+v1.6.1
+Last Updated: 2010-09-17
+Author: Richard Clark - http://richclarkdesign.com 
+Twitter: @rich_clark
+*/
 
-html, body, div, span, applet, object, iframe,
+html, body, div, span, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, font, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	outline: 0;
-	font-size: 100%;
-	vertical-align: baseline;
-	background: transparent;
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
+    margin:0;
+    padding:0;
+    border:0;
+    outline:0;
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
 }
+
 body {
-	line-height: 1;
+    line-height:1;
 }
-ol, ul {
-	list-style: none;
+
+article,aside,details,figcaption,figure,
+footer,header,hgroup,menu,nav,section { 
+    display:block;
 }
+
+ul {
+    list-style:none;
+}
+
 blockquote, q {
-	quotes: none;
+    quotes:none;
 }
+
 blockquote:before, blockquote:after,
 q:before, q:after {
-	content: '';
-	content: none;
+    content:'';
+    content:none;
 }
 
-/* remember to define focus styles! */
-:focus {
-	outline: 0;
+a {
+    margin:0;
+    padding:0;
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
 }
 
-/* remember to highlight inserts somehow! */
+/* change colours to suit your needs */
 ins {
-	text-decoration: none;
+    background-color:#ff9;
+    color:#000;
+    text-decoration:none;
 }
+
+/* change colours to suit your needs */
+mark {
+    background-color:#ff9;
+    color:#000; 
+    font-style:italic;
+    font-weight:bold;
+}
+
 del {
-	text-decoration: line-through;
+    text-decoration: line-through;
 }
 
-/* tables still need 'cellspacing="0"' in the markup */
+abbr[title], dfn[title] {
+    border-bottom:1px dotted;
+    cursor:help;
+}
+
 table {
-	border-collapse: collapse;
-	border-spacing: 0;
+    border-collapse:collapse;
+    border-spacing:0;
 }
 
-html,body { height: 100%; font-family:helvetica,arial,freesans,clean,sans-serif; margin: 0px; padding: 0px; background-color: black }
+/* change border colour to suit your needs */
+hr {
+    display:block;
+    height:1px;
+    border:0;   
+    border-top:1px solid #cccccc;
+    margin:1em 0;
+    padding:0;
+}
+
+input, select {
+    vertical-align:middle;
+}
+
+html,body { height: 100%; font-family:helvetica,arial,freesans,clean,sans-serif}
+body#index { background-color: black; }
 #map {height: 100%; width: 100%; display: none }
 #map header, #map footer, #map nav {background-color: white; padding: 5px}
 #map footer {font-size: small}
 #map header h1, #map header p, #map header {display: inline}
 #map .hints.loading {color: red; font-weight: bold}
 #slideshow { position: relative; font-size:small; display:none; color:white; height: 100%}
-#slideshow h1 {display: inline; font-size: 2em; padding-right: 2em}
-#slideshow nav {display: inline;}
 #slideshow a, #slideshow a:visited { color: white }
-#slideshow div.first { padding: 1em;}
-#slideshow li { height: 100% }
-#slideshow img.slide { display: block; height: 100% }
-#slideshow li footer { right: auto; top: auto; bottom: 0; padding: 1em;}
+#slideshow h1 {font-size: 2em; padding: .3em}
+#slideshow nav {padding: 1em}
+#slideshow nav, #slideshow h1 {float: left;  z-index:1; position: relative; background: black}
+#slideshow ul { clear: both}
+#slideshow li { height: 100%; width: 100%}
+#slideshow img.slide { height: 100%; margin-left: auto; margin-right: auto; display: block }
+#slideshow li footer { right: auto; top: auto; bottom: 0; left: 0; padding: 1em; width: 100%; position: fixed; text-align: center; background: black; z-index: 1}
 #slideshow label { padding: 0 1em; }
 #slideshow footer img { padding: 0 1em 0 0;}
-#slideshow footer { float: left; position: fixed; padding: 2em 1em 1em; top: 0; right: 0;}
+#slideshow footer { float: right; position: absolute; padding: 1em; top: 0; right: 0;}
+/*
+The following adapted from the 100% height stylesheet at http://www.xs4all.nl/~peterned/examples/css/layout1.css
+*/
+
+html,body { background:gray; color:#666; }
+h1,h2,h3,h4,h5{ font-family: georgia,serif }
+body#info h1 { 
+	font-size:1.5em; 
+	margin:0.5em 0;
+}
+
+body#info h2 {
+	font-size:1.25em; 
+	margin:0 0 0.5em;
+}
+
+body#info h1, body#info h2, body#info a {
+	color:orange;
+}
+
+body#info p { 
+	line-height:1.5; 
+	margin:0 0 1em;
+}
+
+body#info div#container {
+	position:relative; /* needed for footer positioning*/
+	margin:0 auto; /* center, not in IE5 */
+	width:750px;
+	background:#f0f0f0;
+	
+	height:auto !important; /* real browsers */
+	height:100%; /* IE6: treaded as min-height*/
+
+	min-height:100%; /* real browsers */
+}
+
+body#info header {
+	padding:1em;
+	background:#ddd url("../csslayout.gif") 98% 10px no-repeat;
+	border-bottom:6px double gray;
+}
+body#info header p {
+	font-style:italic;
+	font-size:1.1em;
+	margin:0;
+}
+
+body#info div#content {
+	padding:1em 1em 5em; /* bottom padding for footer */
+}
+body#info div#content p {
+	text-align:justify;
+	padding:0 1em;
+}
+
+body#info footer {
+	position:fixed;
+	width:100%;
+	bottom:0; /* stick to bottom */
+	background:#ddd;
+	border-top:6px double gray;
+}
+body#info footer p {
+	padding:1em;
+	margin:0;
+}

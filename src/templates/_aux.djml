@@ -1,0 +1,12 @@
+{% extends "_page.djml" %}
+{% block header %}
+<div id="container">
+<header>
+<h1>$CONF_site_name</h1>
+<a href="/" title="create a slideshow for a location">Go to Map</a>
+</header>
+<h2>{{page.title}}</h2>
+<div id="content">
+{% endblock %}
+{% block content %}{% endblock %}
+{% block footer %}</div>{% include "_footer.djml" %}</div>{% endblock %}

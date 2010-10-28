@@ -61,7 +61,7 @@ class Registration(webapp.RequestHandler):
             self.__show({'error':'Flickr says there is no such user.'})
     
     def __show(self,templateValues):
-        templateValues.update({"site":{"name":"$CONF_site_name"},"page":{"title":"Blacklist"}})
+        templateValues.update({"site":{"name":"$CONF_site_name"},"page":{"title":"Blacklist Your Flickr User ID"}})
         path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates'),'blacklist.djml')
         self.response.out.write(template.render(path, templateValues))
         

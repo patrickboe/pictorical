@@ -1,8 +1,7 @@
-{% extends "_page.djml" %}
+{% extends "_aux.djml" %}
 {% block content %}
-		<h1>{{ test }} Blacklist Your Flickr Username From These Slideshows</h1>
 		{% if username %}
-        	<h2>"{{ username }}" has been blacklisted.</h2>
+        	<h3>"{{ username }}" has been blacklisted.</h3>
       	{% else %}
       		<p>The User ID we find for your username will be added to the blacklist published with this application, which it then 
       		uses when vetting photos for display. We may contact you at your Flickr account to make sure it was you, and not someone

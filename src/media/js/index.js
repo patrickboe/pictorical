@@ -324,7 +324,7 @@ pictorical= function(){
 		
 		sizeSlideshow=function(){
 			var $ul=$container.find('ul.slideshow:visible');
-			var availHeight=String($('body').height()-$ul.offset().top*2) + "px";
+			var availHeight=String(Math.floor($('body').height()-$ul.offset().top*2)) + "px";
 			$ul.css("height",availHeight);
 		},
 		
@@ -340,7 +340,7 @@ pictorical= function(){
 				ix=next;
 				return false;
 			};
-			$pause.click(advance);
+			$pause.unbind('click').click(advance);
 			return function(){ix=0; advance();};
 		}();
 		
