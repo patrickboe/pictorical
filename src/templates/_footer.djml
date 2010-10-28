@@ -1,6 +1,8 @@
 <footer>
-	<span class="copyright">Site &copy;2010 Patrick Boe</span>
-	<a href="http://github.com/patrickboe/pictorical" title="Project Source Code" class="source">Source</a>
-	<a href="/terms" class="terms" title="$CONF_site_name Terms of Use and Privacy Policy">Policies</a>
-	<a href="/about" class="about" title="About This Site">About</a>
+	<nav>
+		<span class="copyright">Site &copy;2010 Patrick Boe</span>
+		<a href="http://github.com/patrickboe/pictorical" title="Project Source Code" class="source">Source</a>
+		<a href="/terms" class="terms" title="$CONF_site_name Terms of Use and Privacy Policy">Terms</a>
+		<a href="/about" class="about" title="About This Site">About</a>
+	</nav>
 </footer>

@@ -100,8 +100,13 @@ hr {
 input, select {
     vertical-align:middle;
 }
+/* end reset stylesheet */
 
-html,body { height: 100%; font-family:helvetica,arial,freesans,clean,sans-serif}
+/* sitewide styles */ 
+html,body { height: 100% }
+body, body * {font-family:helvetica,arial,freesans,clean,sans-serif}
+
+/* styles for index page */ 
 body#index { background-color: black; }
 #map {height: 100%; width: 100%; display: none }
 #map header, #map footer, #map nav {background-color: white; padding: 5px}
@@ -119,28 +124,38 @@ body#index { background-color: black; }
 #slideshow li footer { right: auto; top: auto; bottom: 0; left: 0; padding: 1em; width: 100%; position: fixed; text-align: center; background: black; z-index: 1}
 #slideshow label { padding: 0 1em; }
 #slideshow footer img { padding: 0 1em 0 0;}
-#slideshow footer { float: right; position: absolute; padding: 1em; top: 0; right: 0;}
-/*
-The following adapted from the 100% height stylesheet at http://www.xs4all.nl/~peterned/examples/css/layout1.css
-*/
+#slideshow footer { float: right; position: absolute; top: 0; right: 0; z-index: 0}
 
-html,body { background:gray; color:#666; }
-h1,h2,h3,h4,h5{ font-family: georgia,serif }
+/* styles for auxiliary pages. Adapted from the 100% height stylesheet at http://www.xs4all.nl/~peterned/examples/css/layout1.css */
+body#info { 
+	background: #4B674B;
+	color: #444}
+body#info * { color: #333 }
+
+body#info h1,body#info h2,body#info h3,body#info h4,body#info h5{ font-family: georgia,serif }
 body#info h1 { 
-	font-size:1.5em; 
-	margin:0.5em 0;
+	font-size:3em; 
+	margin:0.1em 0;
 }
 
 body#info h2 {
-	font-size:1.25em; 
-	margin:0 0 0.5em;
+	font-size:2em; 
+	margin: 0 0 0.3em;
 }
 
-body#info h1, body#info h2, body#info a {
-	color:orange;
+body#info h3{ font-size:1.2em; margin: 0 0 0.5em }
+
+body#info h4{ font-size: 1em; margin: 0 0 0.5em }
+
+body#info h1, body#info h2 {
+	color: #4B674B;
 }
 
-body#info p { 
+body#info a {
+	color:#FF0000;
+}
+
+body#info p, body#info ol, body#info ul { 
 	line-height:1.5; 
 	margin:0 0 1em;
 }
@@ -149,17 +164,15 @@ body#info div#container {
 	position:relative; /* needed for footer positioning*/
 	margin:0 auto; /* center, not in IE5 */
 	width:750px;
-	background:#f0f0f0;
-	
+	background:#EDEAE2; 
 	height:auto !important; /* real browsers */
 	height:100%; /* IE6: treaded as min-height*/
-
 	min-height:100%; /* real browsers */
 }
 
 body#info header {
 	padding:1em;
-	background:#ddd url("../csslayout.gif") 98% 10px no-repeat;
+	background:#B3D29B url("../csslayout.gif") 98% 10px no-repeat;
 	border-bottom:6px double gray;
 }
 body#info header p {
@@ -171,19 +184,34 @@ body#info header p {
 body#info div#content {
 	padding:1em 1em 5em; /* bottom padding for footer */
 }
+
 body#info div#content p {
 	text-align:justify;
 	padding:0 1em;
 }
 
+body#info div#content ol, body#info div#content ul {
+	text-align:justify;
+	padding:0 1em 0 3em;
+}
+
+body#info div#content ul{
+	list-style: circle;
+}
+
+body#info div#content ul ul{
+	padding-top: 1em;
+}
+
 body#info footer {
-	position:fixed;
+	position: absolute;
 	width:100%;
 	bottom:0; /* stick to bottom */
-	background:#ddd;
+	background:#B3D29B;
 	border-top:6px double gray;
 }
-body#info footer p {
+
+body#info footer nav {
 	padding:1em;
 	margin:0;
 }

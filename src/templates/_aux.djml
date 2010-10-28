@@ -3,10 +3,10 @@
 <div id="container">
 <header>
 <h1>$CONF_site_name</h1>
-<a href="/" title="create a slideshow for a location">Go to Map</a>
+<a href="/" title="create a slideshow for a location">Back to Map</a>
 </header>
-<h2>{{page.title}}</h2>
 <div id="content">
+<h2>{{page.title}}</h2>
 {% endblock %}
 {% block content %}{% endblock %}
 {% block footer %}</div>{% include "_footer.djml" %}</div>{% endblock %}
