@@ -7,6 +7,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from google.appengine.api import urlfetch
 from xml.dom import minidom
+from python import captcha
 
 class BlacklistedFlickrUser(db.Model):
     id = db.StringProperty()
@@ -23,8 +24,14 @@ class List(webapp.RequestHandler):
         self.response.out.write(callback and callback + "(" + blacklist + ");" or blacklist)
 
 class Registration(webapp.RequestHandler):
+    def generateCaptcha(self):
+        return captcha.displayhtml(
+          public_key = "$CONF_recaptcha_public_key",
+          use_ssl = False,
+          error = None)
+    
     def get(self):
-        self.__show({})
+        self.__show({'captchahtml': self.generateCaptcha()})
         
     def post(self):
         def askForID(username): 
@@ -51,14 +58,31 @@ class Registration(webapp.RequestHandler):
                 addition = BlacklistedFlickrUser()
                 addition.id=userid
                 addition.put()
+                
+        def passesCaptcha():
+            challenge = self.request.get('recaptcha_challenge_field')
+            response  = self.request.get('recaptcha_response_field')
+            remoteip  = os.environ['REMOTE_ADDR']
             
-        username=self.request.get('user')
-        userid=username and len(username) < 100 and askForID(username)
-        if(userid):
-            blacklist(userid);
-            self.__show({'username':username})
+            cResponse = captcha.submit(
+                           challenge,
+                           response,
+                           "$CONF_recaptcha_private_key",
+                           remoteip)
+            return cResponse.is_valid
+        
+        if passesCaptcha(): 
+            username=self.request.get('user')
+            userid=username and len(username) < 100 and askForID(username)
+            if(userid):
+                blacklist(userid);
+                self.__show({'username':username})
+            else:
+                self.__show({'error':'Flickr says there is no such user.',
+                             'captchahtml': self.generateCaptcha()})
         else:
-            self.__show({'error':'Flickr says there is no such user.'})
+            self.__show({'error':'I\'m not quite sure you\'re human. Can you enter that reCAPTCHA again?',
+                         'captchahtml': self.generateCaptcha()})
     
     def __show(self,templateValues):
         templateValues.update({"site":{"name":"$CONF_site_name"},"page":{"title":"Blacklist Your Flickr User ID"}})

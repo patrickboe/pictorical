@@ -13,6 +13,7 @@
 		    <form method="post">
 		      <label for="user">Flickr Username</label>
 		      <input type="text" name="user" size="30"/>
+		      {{ captchahtml }}
 		      <input type="submit" value="Add To Blacklist">
 		    </form>
 		{% endif %}

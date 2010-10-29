@@ -11,7 +11,8 @@ from buildconfig import loadConf
 
 options(
         version="0.1",
-        version_date="09/27/2010"
+        version_date="09/27/2010",
+        targetEnv="local"
         )
 
 def appEngineCommand(pyname):
@@ -58,6 +59,7 @@ def build():
     (srcDir / "templates").copytree(deployDir / "templates")
     (buildDir / "app.yaml").copy(deployDir / "app.yaml")
     sh("%s -g -s %s" % (hyde, buildDir))
+    options.update(options.get(options.targetEnv))
     configureFiles()
     mediaDir=deployDir/"media"
     combineName='app-%s' % options.version_name
@@ -78,9 +80,13 @@ def build():
 def run():
     "start local google app engine server for this app"
     sh("%s %s %s" % appEngineCommand("dev_appserver.py"))
-    
+
 @task
-@needs('build')
+def setlive():
+    options.targetEnv="live"
+
+@task
+@needs('setlive','build')
 def deploy():
     "put the current application live"
     sh("%s %s update %s" % appEngineCommand("appcfg.py"))

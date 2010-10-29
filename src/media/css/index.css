@@ -109,7 +109,8 @@ body, body * {font-family:helvetica,arial,freesans,clean,sans-serif}
 /* styles for index page */ 
 body#index { background-color: black; }
 #map {height: 100%; width: 100%; display: none }
-#map header, #map footer, #map nav {background-color: white; padding: 5px}
+#map header, #map footer, #map nav {background-color: white; padding: .3em}
+#map footer nav { padding: 0}
 #map footer {font-size: small}
 #map header h1, #map header p, #map header {display: inline}
 #map .hints.loading {color: red; font-weight: bold}
@@ -143,6 +144,10 @@ body#info h2 {
 	margin: 0 0 0.3em;
 }
 
+#recaptcha_widget_div{
+	margin: 1em 0;
+}
+
 body#info h3{ font-size:1.2em; margin: 0 0 0.5em }
 
 body#info h4{ font-size: 1em; margin: 0 0 0.5em }
@@ -151,7 +156,7 @@ body#info h1, body#info h2 {
 	color: #4B674B;
 }
 
-body#info a {
+body#info a, body#info .error {
 	color:#FF0000;
 }
 
@@ -172,7 +177,7 @@ body#info div#container {
 
 body#info header {
 	padding:1em;
-	background:#B3D29B url("../csslayout.gif") 98% 10px no-repeat;
+	background:#B3D29B;
 	border-bottom:6px double gray;
 }
 body#info header p {
@@ -185,7 +190,7 @@ body#info div#content {
 	padding:1em 1em 5em; /* bottom padding for footer */
 }
 
-body#info div#content p {
+body#info div#content p, body#info div#content form {
 	text-align:justify;
 	padding:0 1em;
 }
