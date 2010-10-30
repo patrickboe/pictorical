@@ -6,7 +6,7 @@ http://www.opensource.org/licenses/mit-license.php
 http://www.gnu.org/licenses/gpl.html
 
 ##Set Up a Dev Environment
-Clone the repository, then change to that directory.
+Clone the repository, then change to the project's src/build directory.
 
 You need Paver, django, pyYAML, and markdown. To install what you don't have yet, run:
 
