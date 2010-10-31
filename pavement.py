@@ -2,6 +2,7 @@ from paver.easy import *
 import string
 import re
 import sys
+import subprocess
 
 deployDir = path("deploy")
 srcDir = path("src")
@@ -15,10 +16,21 @@ options(
         targetEnv="local"
         )
 
-def appEngineCommand(pyname):
-    return (options.app_engine_python_executable, 
-                     path(options.app_engine_path) / pyname, 
-                     deployDir.abspath())
+def appEngineCommand(pyname, args=[]):
+    def report(status):
+        sys.stderr.writelines("%s: " % status, " ".join(cmd))
+    cmd=[options.app_engine_python_executable, 
+        path(options.app_engine_path) / pyname]
+    cmd.extend(args)
+    cmd.append(deployDir.abspath())
+    try:
+        retcode=subprocess.call(cmd)
+        if retcode < 0:
+            report("terminated")
+        else:
+            report("completed")
+    except KeyboardInterrupt:
+        pass
 
 @task 
 def auto(): 
@@ -79,7 +91,7 @@ def build():
 @needs('build')
 def run():
     "start local google app engine server for this app"
-    sh("%s %s %s" % appEngineCommand("dev_appserver.py"))
+    appEngineCommand("dev_appserver.py",["--port=%d" % options.app_engine_portnum])
 
 @task
 def setlive():
@@ -89,4 +101,4 @@ def setlive():
 @needs('setlive','build')
 def deploy():
     "put the current application live"
-    sh("%s %s update %s" % appEngineCommand("appcfg.py"))
+    appEngineCommand("appcfg.py",["update"])
