@@ -17,6 +17,10 @@ pictorical= function(){
 		}
 	},
 	
+	trace=function(s) {
+    try { console.log(s) } catch (e) { alert(s) }
+  },
+	
 	makeScene=function($map,circle,onSelection,onSelectionLoaded){ //returns a function to be called on show
 		var map;
 		var mapClickListener;
@@ -30,8 +34,14 @@ pictorical= function(){
 			$hints.text(hint);
 		};
 		
+		var unlisten=function(listener){
+		  if(typeof listener !== undefined){
+		     google.maps.event.removeListener(listener);
+		  }
+		};
+		
 		var updateMapClickBehavior=function(lambda){
-			mapClickListener=google.maps.event.addListener(map,"click",lambda);
+			mapClickListener=google.maps.event.addListenerOnce(map,"click",lambda);
 		};
 		
 		var distanceInMeters=function(locA,locB){
@@ -43,7 +53,7 @@ pictorical= function(){
 			geocoder=new google.maps.Geocoder(),
 			startOptions=
 							{
-								zoom: 15,
+								zoom: 13,
 								center: HardenaRestaurant,
 								streetViewControl: false,
 								mapTypeControl: false,
@@ -121,21 +131,24 @@ pictorical= function(){
 				circle.setMap(null);
 				circle=null;
 			}
-			if(!!mapClickListener){
-				google.maps.event.removeListener(mapClickListener);
-			}
 		};
 		
 		var cancelSelection=function(event){
 			cancelSelectionCallback();
 			clearMap();
-			acceptSelections();
+			/*
+			 * can't just start accepting selections right now because IE8 doesn't like event 
+			 * listeners that spawn listeners for the same event, in this case map click - it
+			 * just goes ahead and executes the handler right away, instead of waiting for 
+			 * the event to happen again. so, we'll set the click event handler after a 
+			 * brief timeout.
+			 */
+			window.setTimeout(acceptSelections,100);
 		};
 		
 		var acceptSelections=function(){
 			updateMapClickBehavior(function(event){
 				drawCircleAt(event.latLng);
-				google.maps.event.removeListener(mapClickListener);
 				displayHint("Move to resize, then click again.");
 				acceptResizing();
 			});
@@ -155,17 +168,17 @@ pictorical= function(){
 		
 		var acceptResizing=function(){
 			var finalizeSelection=function(event){
-				google.maps.event.removeListener(mapMoveListener);
-				google.maps.event.removeListener(mapClickListener);
-				google.maps.event.removeListener(doneOnCircleListener);
+				unlisten(moveListener);
+				unlisten(downListener);
 				selectionMade();
 				acceptUpdates();
 			};
-			var doneOnCircleListener=google.maps.event.addListener(circle,"mousedown",finalizeSelection);
-			var mapMoveListener=google.maps.event.addListener(map,"mousemove",function(event){
-				circle.setRadius(distanceInMeters(circle.getCenter(), event.latLng));
-			});
-			updateMapClickBehavior(finalizeSelection);
+			var resize=function(event){ 
+				circle.setRadius(distanceInMeters(circle.getCenter(), event.latLng)); 
+			};
+			var moveListener=google.maps.event.addListener(map,"mousemove",resize);
+			//finalize selection when mousedown
+			var downListener=google.maps.event.addDomListenerOnce(document,'mousedown',finalizeSelection);
 		};
 		
 		var selectionMade=function(){
@@ -188,7 +201,7 @@ pictorical= function(){
 			
 			replaceCircleBehavior=function(nextEvents,nextAction){
 				while(circleFocusListeners.length>0){
-					google.maps.event.removeListener(circleFocusListeners.pop());
+				  unlisten(circleFocusListeners.pop());
 				}
 				addCircleBehavior(nextEvents,nextAction);
 			},
@@ -212,7 +225,7 @@ pictorical= function(){
 			},
 			
 			endDrag=function(event){ 
-				google.maps.event.removeListener(moveListener);
+				unlisten(moveListener);
 				moveListener=null;
 				replaceCircleBehavior(leaveEvents,dropDraggability);
 				addCircleBehavior(["mousedown"],startDrag);
@@ -271,7 +284,7 @@ pictorical= function(){
 				   var $this=$(this),
 				   img=$this.find("img.slide")[0],
 				   areaW=Math.round(img.clientWidth/2)-5,
-				   prevRightEdge=String(areaW),
+					prevRightEdge=String(areaW),
 				   nextLeftEdge=String(areaW+10),
 				   w=String(img.clientWidth),
 				   h=String(img.clientHeight),
@@ -404,12 +417,19 @@ pictorical= function(){
 		var flickrBlacklist={},
 		
 		blacklistLoaded=false,
-		
-		onBlacklistLoaded=function(blacklist){
-			for (var i=0;i<blacklist.length;i++){
-				flickrBlacklist[blacklist[i]]=1;
+		blacklistLoadHandlers=[
+			function(blacklist){
+				for (var i=0;i<blacklist.length;i++){
+					flickrBlacklist[blacklist[i]]=1;
+				}
+				blacklistLoaded=true;
 			}
-			blacklistLoaded=true;
+		],
+		
+		onBlacklistLoaded=function(data){
+			for(var i=blacklistLoadHandlers.length-1;i>=0;i--){
+				blacklistLoadHandlers[i](data);
+			}
 		},
 		
 		parseDate= function (flickrDate){
@@ -484,10 +504,9 @@ pictorical= function(){
 								}
 								photosFoundCallback(photos);
 							} else {
-								onBlacklistLoaded=function(blacklist){
-									curOnBlacklistLoaded(blacklist);
+								blacklistLoadHandlers.push(function(blacklist){
 									processPhotos(data);
-								};
+								});
 							}
 						} else{
 							//we don't have license information yet. set this to run when we do.

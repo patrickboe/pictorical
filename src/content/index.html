@@ -1,15 +1,17 @@
 {% extends "_page.djml" %}
 {%hyde
-    title: "Make a Scene"
+    title: "Slideshows By Location"
     id: "index"
 %}
 	{% block head %}
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<!--
+	<meta  http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />-->
 	{% endblock %}
 	{% block content %}
 		<div id="map">
 			<header>
-				<h1>$CONF_site_name</h1> 
+				<h1>{{site.name}}</h1> 
 				<p class="hints">Click to choose a slideshow area. Try your street corner.</p>
 			</header>
 			<nav>
@@ -17,7 +19,7 @@
 			</nav>
 		</div>
 		<div id="slideshow">
-			<h1>$CONF_site_name</h1>
+			<h1>{{site.name}}</h1>
 			<nav>
 				<a class="back" href="#">Back To Map</a>
 				<a class="pause" href="#pause">Pause</a>

@@ -108,15 +108,18 @@ body, body * {font-family:helvetica,arial,freesans,clean,sans-serif}
 
 /* styles for index page */ 
 body#index { background-color: black; }
+body#index h1 { text-transform: uppercase; }
 #map {height: 100%; width: 100%; display: none }
-#map header, #map footer, #map nav {background-color: white; padding: .3em}
-#map footer nav { padding: 0}
-#map footer {font-size: small}
+#map header, #map nav {color: #4B674B; background-color: #B3D29B; padding: .3em; margin: .5em}
+#map nav input { color: #4B674B; border-color: #4B674B}
+#map nav label { font-weight: bold }
+#map footer nav { padding: 0; color: black; background-color: transparent; margin: 0}
+#map footer {font-size: small; padding: .3em; background-color: white;}
 #map header h1, #map header p, #map header {display: inline}
 #map .hints.loading {color: red; font-weight: bold}
 #slideshow { position: relative; font-size:small; display:none; color:white; height: 100%}
 #slideshow a, #slideshow a:visited { color: white }
-#slideshow h1 {font-size: 2em; padding: .3em}
+#slideshow h1 {font-size: 1.3em; padding: .7em}
 #slideshow nav {padding: 1em}
 #slideshow nav, #slideshow h1 {float: left;  z-index:1; position: relative; background: black}
 #slideshow ul { clear: both}

@@ -2,10 +2,13 @@
 <html lang="en" class="no-js">
 	<head>
 		<meta charset="utf-8" />
-		<title>{{site.name}} : {{page.title}}</title>
-		<link type="text/css" href="/media/css/app-$CONF_version_name.css" rel="stylesheet" />	
+		<title>{{site.name|upper}} : {{page.title}}</title>
 		{% block head %}
 		{% endblock %}
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+		<link type="text/css" href="/media/css/app-$CONF_version_name.css" rel="stylesheet" />	
 	</head>
 	<body id="{{page.id|default:"info"}}">
 	{% block header %}{% endblock %}
