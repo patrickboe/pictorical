@@ -95,7 +95,7 @@ pictorical= function(){
 						geocoder.geocode({address:request.term},adaptGoogleResponse);
 					}
 				}).end()[0],
-			terms=$('footer').clone()[0];
+			terms=$map.find('footer')[0];
 			map = new google.maps.Map($map[0],startOptions);
 			map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
 			map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchnav);
@@ -668,7 +668,9 @@ pictorical= function(){
 			slideSources=[flickr.createSource(),panoramio.requestPhotos],
 			
 			onHashChange=function(){
-				if(window.location.hash==="") {showMap();}
+				if(window.location.hash==="" || window.location.hash==="#") {
+					showMap();
+				}
 				else if (loadedHash===window.location.hash){
 					showSlides();
 				} else {
