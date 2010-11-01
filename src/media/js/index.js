@@ -18,8 +18,8 @@ pictorical= function(){
 	},
 	
 	trace=function(s) {
-    try { console.log(s) } catch (e) { alert(s) }
-  },
+	    try { console.log(s) } catch (e) { alert(s) }
+	},
 	
 	makeScene=function($map,circle,onSelection,onSelectionLoaded){ //returns a function to be called on show
 		var map;
@@ -69,6 +69,7 @@ pictorical= function(){
 						if(!!place.bounds){
 							map.fitBounds(place.bounds);
 						}
+						cancelSelection();
 						return false; //don't populate search box
 					},
 					focus: function(){
@@ -100,6 +101,9 @@ pictorical= function(){
 			map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
 			map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchnav);
 			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
+			google.maps.event.addListener(map,"click",function(){
+				$map.find('nav input').autocomplete('close');
+			});
 		};
 		
 		var drawCircleAt=function(location,radius) {
@@ -136,6 +140,9 @@ pictorical= function(){
 		var cancelSelection=function(event){
 			cancelSelectionCallback();
 			clearMap();
+			if(!!mapClickListener){
+				google.maps.event.removeListener(mapClickListener);
+			}
 			/*
 			 * can't just start accepting selections right now because IE8 doesn't like event 
 			 * listeners that spawn listeners for the same event, in this case map click - it
@@ -199,10 +206,14 @@ pictorical= function(){
 				}
 			},
 			
-			replaceCircleBehavior=function(nextEvents,nextAction){
+			dropCircleBehavior=function(){
 				while(circleFocusListeners.length>0){
 				  unlisten(circleFocusListeners.pop());
 				}
+			},
+			
+			replaceCircleBehavior=function(nextEvents,nextAction){
+				dropCircleBehavior();
 				addCircleBehavior(nextEvents,nextAction);
 			},
 			
@@ -237,8 +248,10 @@ pictorical= function(){
 			};
 
 			addCircleBehavior(enterEvents,addDraggability);
+			
 			updateMapClickBehavior(function(){
 				displayHint("You can choose another circle.");
+				dropCircleBehavior();
 				cancelSelection();
 			});
 		},
@@ -290,11 +303,20 @@ pictorical= function(){
 				   h=String(img.clientHeight),
 				   prevRect="0,0,"+prevRightEdge+","+h,
 				   nextRect=nextLeftEdge+",0,"+w+","+h;
-				   $this
-				   .find("area.prev").attr("coords",prevRect)
-				   .end()
-				   .find("area.next").attr("coords",nextRect);
+				   if(img.clientWidth){
+					   $this
+					   .find("area.prev").attr("coords",prevRect)
+					   .end()
+					   .find("area.next").attr("coords",nextRect);
+				   }
 			   };
+				
+			var sizeSlideshow=function(){
+				var $ul=$container.find('ul.slideshow:visible');
+				var availHeight=String(Math.floor($('body').height()-$ul.offset().top*2)) + "px";
+				$ul.css("height",availHeight);
+				$ul.find("li:visible").each(adjustImageMap);
+			};
 			
 			var loadPhoto=function(photo){
 				$slides.append('<li><img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
@@ -333,12 +355,6 @@ pictorical= function(){
 						.resize(sizeSlideshow);
 				}
 			});
-		},
-		
-		sizeSlideshow=function(){
-			var $ul=$container.find('ul.slideshow:visible');
-			var availHeight=String(Math.floor($('body').height()-$ul.offset().top*2)) + "px";
-			$ul.css("height",availHeight);
 		},
 		
 		start=function(){
