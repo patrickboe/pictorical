@@ -35,13 +35,28 @@ pictorical= function(){
 		};
 		
 		var unlisten=function(listener){
-		  if(typeof listener !== undefined){
+		  if(!!listener){
 		     google.maps.event.removeListener(listener);
 		  }
 		};
 		
-		var updateMapClickBehavior=function(lambda){
-			mapClickListener=google.maps.event.addListenerOnce(map,"click",lambda);
+		var updateMapClickBehavior=function(lambda,repeat){
+			/*
+			 * can't just start accepting clicks right now because IE8 doesn't like event 
+			 * listeners that spawn listeners for the same event, in this case map click - it
+			 * just goes ahead and executes the handler right away, instead of waiting for 
+			 * the event to happen again. so, we'll set the click event handler after a 
+			 * brief timeout.
+			 */
+			var listenAdder = !!repeat ? google.maps.event.addListener : google.maps.event.addListenerOnce;
+			return window.setTimeout(function(){
+				mapClickListener=listenAdder(map,"click",lambda);
+			},100);
+		};
+		
+		var cancelMapClickBehavior=function(handle){
+			window.clearTimeout(handle);
+			unlisten(mapClickListener);
 		};
 		
 		var distanceInMeters=function(locA,locB){
@@ -49,6 +64,7 @@ pictorical= function(){
 		};
 		
 		var drawStartingMap=function(){
+			var isSmall=$(window).width()<900;
 			var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257),
 			geocoder=new google.maps.Geocoder(),
 			startOptions=
@@ -70,10 +86,10 @@ pictorical= function(){
 							map.fitBounds(place.bounds);
 						}
 						cancelSelection();
-						return false; //don't populate search box
+						return false; //don't populate search box with value
 					},
 					focus: function(){
-						return false; //don't populate search box
+						return false; //don't populate search box with value
 					},
 					source: function(request, response) {
 						var adaptGeocoderResult=function(gcresult){
@@ -98,7 +114,7 @@ pictorical= function(){
 				}).end()[0],
 			terms=$map.find('footer')[0];
 			map = new google.maps.Map($map[0],startOptions);
-			map.controls[google.maps.ControlPosition.TOP].push(pictoricalTitle);
+			map.controls[google.maps.ControlPosition[isSmall?"TOP_LEFT":"TOP"]].push(pictoricalTitle);
 			map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchnav);
 			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
 			google.maps.event.addListener(map,"click",function(){
@@ -140,17 +156,8 @@ pictorical= function(){
 		var cancelSelection=function(event){
 			cancelSelectionCallback();
 			clearMap();
-			if(!!mapClickListener){
-				google.maps.event.removeListener(mapClickListener);
-			}
-			/*
-			 * can't just start accepting selections right now because IE8 doesn't like event 
-			 * listeners that spawn listeners for the same event, in this case map click - it
-			 * just goes ahead and executes the handler right away, instead of waiting for 
-			 * the event to happen again. so, we'll set the click event handler after a 
-			 * brief timeout.
-			 */
-			window.setTimeout(acceptSelections,100);
+			unlisten(mapClickListener);
+			acceptSelections();
 		};
 		
 		var acceptSelections=function(){
@@ -177,15 +184,26 @@ pictorical= function(){
 			var finalizeSelection=function(event){
 				unlisten(moveListener);
 				unlisten(downListener);
+				cancelMapClickBehavior(mapClickHandle);
+				unlisten(circleListener);
 				selectionMade();
 				acceptUpdates();
 			};
 			var resize=function(event){ 
 				circle.setRadius(distanceInMeters(circle.getCenter(), event.latLng)); 
 			};
-			var moveListener=google.maps.event.addListener(map,"mousemove",resize);
-			//finalize selection when mousedown
-			var downListener=google.maps.event.addDomListenerOnce(document,'mousedown',finalizeSelection);
+			var downListener=null;
+			var circleListener=google.maps.event.addListenerOnce(circle,'click',finalizeSelection);
+			var moveListener=google.maps.event.addListenerOnce(map,"mousemove",function(event){
+				//we know user can move mouse to resize, so we can allow them to click anywhere to finalize
+				unlisten(circleListener);
+				cancelMapClickBehavior(mapClickHandle);
+				//finalize selection when mousedown
+				downListener=google.maps.event.addDomListenerOnce(document,'mousedown',finalizeSelection);
+				resize(event);
+				moveListener=google.maps.event.addListener(map,"mousemove",resize);
+			});
+			var mapClickHandle=updateMapClickBehavior(resize,true);
 		};
 		
 		var selectionMade=function(){
@@ -197,12 +215,10 @@ pictorical= function(){
 			var 
 			circleFocusListeners=[], 
 			moveListener=null,
-			enterEvents=["mouseover","mousedown"],
-			leaveEvents=["mouseout","mouseup"],
 			
 			addCircleBehavior=function(eventNames,action){
 				for(var i=0;i<eventNames.length;i++){
-					circleFocusListeners.push(google.maps.event.addListener(circle,eventNames[i],action));
+					circleFocusListeners.push(google.maps.event.addListenerOnce(circle,eventNames[i],action));
 				}
 			},
 			
@@ -217,37 +233,27 @@ pictorical= function(){
 				addCircleBehavior(nextEvents,nextAction);
 			},
 			
-			addDraggability=function(event){
-				replaceCircleBehavior(leaveEvents,dropDraggability);
-				map.setOptions({draggable:false});
-				addCircleBehavior(["mousedown","click"],startDrag);
-			},
-			
-			dropDraggability=function(event){
-				replaceCircleBehavior(enterEvents,addDraggability);
+			endDrag=function(event){
+				unlisten(moveListener);
+				moveListener=null;
+				selectionMade();
 				map.setOptions({draggable:true});
+				replaceCircleBehavior(["mousedown"],startDrag);
 			}, 
 			
 			startDrag=function(event){ 
+				map.setOptions({draggable:false});
 				cancelSelectionCallback();
 				moveListener=google.maps.event.addListener(map,"mousemove",followMouse);
-				replaceCircleBehavior(["mouseup","click"],endDrag); //mouseup isn't raised at the expected time on all browsers. click is a fallback.
+				replaceCircleBehavior(["mouseup","click","mouseover"],endDrag); //mouseup isn't raised at the expected time on all browsers. click and mouseover are fallbacks.
 				displayHint("You can move the circle.");
-			},
-			
-			endDrag=function(event){ 
-				unlisten(moveListener);
-				moveListener=null;
-				replaceCircleBehavior(leaveEvents,dropDraggability);
-				addCircleBehavior(["mousedown"],startDrag);
-				selectionMade();
 			},
 			
 			followMouse=function(event){
 				circle.setCenter(event.latLng);
 			};
 
-			addCircleBehavior(enterEvents,addDraggability);
+			addCircleBehavior(["mousedown"],startDrag);
 			
 			updateMapClickBehavior(function(){
 				displayHint("You can choose another circle.");

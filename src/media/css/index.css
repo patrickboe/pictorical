@@ -112,9 +112,10 @@ body#index h1 { text-transform: uppercase; }
 #map header, #map nav {color: #4B674B; background-color: #B3D29B; padding: .3em; margin: .5em}
 #map nav input { color: #4B674B; border-color: #4B674B}
 #map nav label { font-weight: bold }
+#map header { margin-right: 20em;}
 #map footer nav { padding: 0; color: black; background-color: transparent; margin: 0}
-#map footer {font-size: small; padding: .3em; background-color: white;}
-#map header h1, #map header p, #map header {display: inline}
+#map footer {font-size: x-small; padding: .3em; background-color: white;}
+#map header h1, #map header p{display: inline}
 #map .hints.loading {color: red; font-weight: bold}
 #slideshow { position: relative; font-size:small; display:none; color:white; height: 100%; background-color: black}
 #slideshow a, #slideshow a:visited { color: white }

@@ -18,7 +18,7 @@ options(
 
 def appEngineCommand(pyname, args=[]):
     def report(status):
-        sys.stderr.writelines("%s: " % status, " ".join(cmd))
+        sys.stderr.writelines(["%s: " % status, " ".join(cmd)])
     cmd=[options.app_engine_python_executable, 
         path(options.app_engine_path) / pyname]
     cmd.extend(args)

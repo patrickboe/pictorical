@@ -3,7 +3,7 @@
 <div id="container">
 <header>
 <h1>{{site.name}}</h1>
-<a href="/" title="create a slideshow for a location">Back to Map</a>
+<a href="/" title="create a slideshow for a location">Map</a>
 </header>
 <div id="content">
 <h2>{{page.title}}</h2>
