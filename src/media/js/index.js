@@ -30,12 +30,12 @@ pictorical= function(){
 		
 		var displayHint=function(hint,isLoading){
 			var $hints=$map.find("p.hints");
-			$hints.toggleClass('loading',!!isLoading);
+			$hints.toggleClass('loading',isLoading);
 			$hints.text(hint);
 		};
 		
 		var unlisten=function(listener){
-		  if(!!listener){
+		  if(listener){
 		     google.maps.event.removeListener(listener);
 		  }
 		};
@@ -48,7 +48,7 @@ pictorical= function(){
 			 * the event to happen again. so, we'll set the click event handler after a 
 			 * brief timeout.
 			 */
-			var listenAdder = !!repeat ? google.maps.event.addListener : google.maps.event.addListenerOnce;
+			var listenAdder = repeat ? google.maps.event.addListener : google.maps.event.addListenerOnce;
 			return window.setTimeout(function(){
 				mapClickListener=listenAdder(map,"click",lambda);
 			},100);
@@ -64,13 +64,32 @@ pictorical= function(){
 		};
 		
 		var drawStartingMap=function(){
-			var isSmall=$(window).width()<900;
-			var HardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257),
+			var tryToGeolocate=function(){
+				/*
+				 * this function is lightly adapted from google's maps api example code at 
+				 * http://code.google.com/apis/maps/documentation/javascript/basics.html#Geolocation
+				 */
+				// Try W3C Geolocation (Preferred)
+				var onFound=function(position){
+					map.setCenter(new google.maps.LatLng(position.latitude,position.longitude));
+				};
+				if(navigator.geolocation) {
+					navigator.geolocation.getCurrentPosition(function(position) {
+						onFound(position.coords);
+					});
+				// Try Google Gears Geolocation
+				} else if (google.gears) {
+					var geo = google.gears.factory.create('beta.geolocation');
+					geo.getCurrentPosition(onFound);
+				}
+			},
+			isSmall=$(window).width()<900,
+			hardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257),
 			geocoder=new google.maps.Geocoder(),
 			startOptions=
 							{
 								zoom: 13,
-								center: HardenaRestaurant,
+								center: hardenaRestaurant,
 								streetViewControl: false,
 								mapTypeControl: false,
 								mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -82,7 +101,7 @@ pictorical= function(){
 						var place=ui.item.value;
 						this.value=ui.item.label;
 						map.setCenter(place.location);
-						if(!!place.bounds){
+						if(place.bounds){
 							map.fitBounds(place.bounds);
 						}
 						cancelSelection();
@@ -114,6 +133,7 @@ pictorical= function(){
 				}).end()[0],
 			terms=$map.find('footer')[0];
 			map = new google.maps.Map($map[0],startOptions);
+			tryToGeolocate();
 			map.controls[google.maps.ControlPosition[isSmall?"TOP_LEFT":"TOP"]].push(pictoricalTitle);
 			map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchnav);
 			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
@@ -140,14 +160,14 @@ pictorical= function(){
 		};
 		
 		var cancelSelectionCallback=function(){
-			if(!!selectionHandle){
+			if(selectionHandle){
 				selectionHandle.cancel();
 				selectionHandle=null;
 			}
 		};
 		
 		var clearMap=function(){
-			if(!!circle){
+			if(circle){
 				circle.setMap(null);
 				circle=null;
 			}
@@ -410,7 +430,7 @@ pictorical= function(){
 				};
 				var acceptPhotos=function(photos){
 					responsesReceived++;
-					if(!!timeoutID){
+					if(timeoutID){
 						allPhotos=allPhotos.concat(photos);
 						if(responsesReceived===requestsMade){
 							cancelTimeout();
@@ -514,7 +534,7 @@ pictorical= function(){
 						var i=0;
 						if(licenses.length){
 							if(blacklistLoaded){
-								if(!!data.photos){
+								if(data.photos){
 									photos=data.photos.photo;
 								}
 								constructArray(photos,PhotoFactory(licenses));
@@ -547,7 +567,7 @@ pictorical= function(){
 							api_key: apiKey
 						},
 						function(data){
-							if(!!data.licenses.license){
+							if(data.licenses.license){
 								licenses=data.licenses.license;
 								licenses.sort(function(a,b){
 									return a.id>b.id;
@@ -624,7 +644,7 @@ pictorical= function(){
 						},
 						function(data){
 							var photos=[];
-							if(!!data.count){
+							if(data.count){
 								photos=data.photos;
 							}
 							constructArray(photos,Photo);
@@ -655,7 +675,7 @@ pictorical= function(){
 			showSlides=function(selection){
 				$("#map").hide();
 				$("#slideshow").show();
-				if(!!selection){
+				if(selection){
 					window.location.hash="slideshow:"+selection.center.lat()+","+selection.center.lng()+","+selection.radius;
 					loadedHash=window.location.hash;
 				}
@@ -702,7 +722,7 @@ pictorical= function(){
 			
 			routeHash=function(){
 				var selection=hashToSlideshowSelection(window.location.hash);
-				if(!!selection){
+				if(selection){
 					displaySlideshow(selection,onSlidesLoaded);
 					return selection;
 				} else {

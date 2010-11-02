@@ -1,12 +1,12 @@
-/** 
+/*! 
  * Patrick Boe, 2010:
  * The following formulas are adapted slightly for google's object model from Chris Veness' code under 
  * the following copyright, license details available at the included url:
+ *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+ *  Latitude/longitude spherical geodesy formulae & scripts (c) Chris Veness 2002-2010            
+ *   - www.movable-type.co.uk/scripts/latlong.html                                                
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
  */
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
-/*  Latitude/longitude spherical geodesy formulae & scripts (c) Chris Veness 2002-2010            */
-/*   - www.movable-type.co.uk/scripts/latlong.html                                                */
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 //extend google's LatLng to include a distance/bearing methods
 google.maps.LatLng.prototype.distanceTo=
 /**
