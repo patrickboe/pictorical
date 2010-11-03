@@ -29,9 +29,9 @@ pictorical= function(){
 		var geocoder;
 		
 		var displayHint=function(hint,isLoading){
-			var $hints=$map.find("p.hints");
-			$hints.toggleClass('loading',isLoading);
-			$hints.text(hint);
+			$map.find("p.hints")
+				[isLoading?"addClass":"removeClass"]('loading')
+				.text(hint);
 		};
 		
 		var unlisten=function(listener){
@@ -105,9 +105,11 @@ pictorical= function(){
 							map.fitBounds(place.bounds);
 						}
 						cancelSelection();
+						$(event.target).val("").blur();
 						return false; //don't populate search box with value
 					},
-					focus: function(){
+					focus: function(event,ui){
+						this.value=ui.item.label;
 						return false; //don't populate search box with value
 					},
 					source: function(request, response) {
@@ -130,7 +132,8 @@ pictorical= function(){
 						};
 						geocoder.geocode({address:request.term},adaptGoogleResponse);
 					}
-				}).end()[0],
+				})
+				.end()[0],
 			terms=$map.find('footer')[0];
 			map = new google.maps.Map($map[0],startOptions);
 			tryToGeolocate();
@@ -145,7 +148,7 @@ pictorical= function(){
 		var drawCircleAt=function(location,radius) {
 		  var clickedLocation = new google.maps.LatLng(location);
 		  if(typeof radius === 'undefined'){
-			  radius=50;
+			  radius=1;
 		  }
 		  circle = new google.maps.Circle({
 			  center: location, 
@@ -344,13 +347,14 @@ pictorical= function(){
 				$ul.find("li:visible").each(adjustImageMap);
 			};
 			
-			var loadPhoto=function(photo){
+			var loadPhoto=function(photo, seq, of){
 				$slides.append('<li><img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
 				'<map name="p'+photo.getID()+'">'+
 				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous"/>'+
 				'<area shape="rect" class="next" coords="50,0,90,40" href="#next" title="Advance to Next Photo" alt="Next"/>'+
 				'</map>'+
-				'<footer><a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
+				'<footer><label>'+seq+' of '+of+'</label><a href='+photo.getPage()+'>'+htmlEncode(photo.getTitle())+'</a> by <a href='+
+				photo.getOwnerUrl()+'>'+htmlEncode(photo.getOwnerName())+'</a>'+
 				'<label>'+photo.getDate().toLocaleDateString()+'</label>'+
 				photo.getLicenseSnippet()+photo.getApiCredit()+'</footer>'+
 		'</li>');
@@ -362,7 +366,7 @@ pictorical= function(){
 			$slides.cycle('destroy').empty();
 			//add photos to the DOM
 			for(var i=0;i<photos.length;i++){
-				loadPhoto(photos[i]);
+				loadPhoto(photos[i],i+1,photos.length);
 			}
 			//set the images to cycle once the first one loads
 			$slides.find("img.slide:first").load(function(){
@@ -635,7 +639,7 @@ pictorical= function(){
 						{
 							set:"public",
 							from:0,
-							to:29,
+							to:30,
 							minx:sw.lng(),
 							miny:sw.lat(),
 							maxx:ne.lng(),
@@ -756,5 +760,11 @@ pictorical= function(){
 		
 		return loader;
 }();
+
+var addthis_config = {
+  data_use_flash: false,
+  data_use_cookies: false,
+  ui_click: true
+};
 
 $(pictorical);

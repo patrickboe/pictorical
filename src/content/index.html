@@ -12,7 +12,7 @@
 		<div id="map">
 			<header>
 				<h1>{{site.name}}</h1> 
-				<p class="hints">Click to choose a slideshow area. Try your street corner.</p>
+				<p class="hints">Click somewhere to choose a slideshow area.</p>
 			</header>
 			<nav>
 				<input type="search" id="mapSearch" size="20" placeholder="Go To"/>
@@ -22,16 +22,20 @@
 		<div id="slideshow">
 			<h1>{{site.name}}</h1>
 			<nav>
-				<a class="back" href="#">Map</a>
-				<a class="pause" href="#pause">Pause</a>
-				<a class="prev" href="#prev">Previous</a>
-				<a class="next" href="#next">Next</a>
+				<a class="back" title="Return to Map Page" href="#">Map</a>
+				<a class="pause" title="Pause Slideshow" href="#pause">Pause</a>
+				<a class="prev" title="Return to Previous Photo" href="#prev">Previous</a>
+				<a class="next" title="Advance to Next Photo" href="#next">Next</a>
+				<div class="addthis_toolbox addthis_default_style">
+				<a href="http://www.addthis.com/bookmark.php?v=250&amp;username=xa-4cd0eaab34e60cd7" title="Share this Slideshow" class="addthis_button_compact"></a>
+				</div>
 			</nav>
 			<ul class="slideshow"></ul>
 			{% include "_footer.djml" %}
 		</div>
 		<script type="text/javascript" src="http://maps.google.com/maps/api/js?v=3.1&amp;sensor=false"></script>
 		<script type="text/javascript" src="http://www.google.com/jsapi?key=$CONF_google_api_key"></script>
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		<script type="text/javascript" src="/media/js/app-$CONF_version_name.js"></script>
+		<script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#username=xa-4cd0dc964f743433"></script>
 	{% endblock %}

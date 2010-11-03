@@ -112,13 +112,15 @@ body#index h1 { text-transform: uppercase; }
 #map header, #map nav {color: #4B674B; background-color: #B3D29B; padding: .3em; margin: .5em}
 #map nav input { color: #4B674B; border-color: #4B674B}
 #map nav label { font-weight: bold }
-#map header { margin-right: 20em;}
+#map header { margin-right: 14em;}
 #map footer nav { padding: 0; color: black; background-color: transparent; margin: 0}
 #map footer {font-size: x-small; padding: .3em; background-color: white;}
-#map header h1, #map header p{display: inline}
+#map header h1, #map header p {float: left}
+#map header h1 { margin-right: .5em; }
 #map .hints.loading {color: red; font-weight: bold}
 #slideshow { position: relative; font-size:small; display:none; color:white; height: 100%; background-color: black}
 #slideshow a, #slideshow a:visited { color: white }
+#slideshow div.addthis_toolbox { float:right }
 #slideshow h1 {font-size: 1.3em; padding: .7em}
 #slideshow nav {padding: 1em}
 #slideshow nav, #slideshow h1 {float: left;  z-index:1; position: relative; background: black}
@@ -129,7 +131,7 @@ body#index h1 { text-transform: uppercase; }
 #slideshow label { padding: 0 1em; }
 #slideshow footer img { padding: 0 1em 0 0;}
 #slideshow footer { float: right; position: absolute; top: 0; right: 0; z-index: 0}
-
+/*a.addthis_button_compact span {display: none}*/
 /* styles for auxiliary pages. Adapted from the 100% height stylesheet at http://www.xs4all.nl/~peterned/examples/css/layout1.css */
 body#info { 
 	background: #4B674B;
