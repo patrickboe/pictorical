@@ -4,18 +4,28 @@ runtime: python
 api_version: 1
 
 handlers:
-- url: /
-  upload: index.html
-  static_files: index.html
-
-- url: /blacklist.*
-  script: python/blacklist.py
-
 - url: /media/(.*)
   expiration: "365d"
   upload: media/.*
   static_files: media/\1
+  
+- url: /
+  upload: index.html
+  static_files: index.html
  
 - url: /(\w+)/?
   upload: .*\.html
   static_files: \1.html
+
+- url: /blacklist.*
+  script: python/blacklist.py
+  
+- url: (/favicon\.ico)
+  expiration: "365d"
+  upload: media/images/favicon.ico
+  static_files: media/images\1
+
+- url: (/robots\.txt)
+  expiration: "365d"
+  upload: media/data/robots.txt
+  static_files: media/data\1

@@ -120,9 +120,9 @@ body#index h1 { text-transform: uppercase; }
 #map .hints.loading {color: red; font-weight: bold}
 #slideshow { position: relative; font-size:small; display:none; color:white; height: 100%; background-color: black}
 #slideshow a, #slideshow a:visited { color: white }
-#slideshow div.addthis_toolbox { float:right }
 #slideshow h1 {font-size: 1.3em; padding: .7em}
 #slideshow nav {padding: 1em}
+#slideshow div.addthis_toolbox { float:left }
 #slideshow nav, #slideshow h1 {float: left;  z-index:1; position: relative; background: black}
 #slideshow ul { clear: both}
 #slideshow li { height: 100%; width: 100%}
@@ -131,6 +131,7 @@ body#index h1 { text-transform: uppercase; }
 #slideshow label { padding: 0 1em; }
 #slideshow footer img { padding: 0 1em 0 0;}
 #slideshow footer { float: right; position: absolute; top: 0; right: 0; z-index: 0}
+div.addthis_toolbox {float:left}
 /*a.addthis_button_compact span {display: none}*/
 /* styles for auxiliary pages. Adapted from the 100% height stylesheet at http://www.xs4all.nl/~peterned/examples/css/layout1.css */
 body#info { 
