@@ -4,20 +4,15 @@ v1.6.1
 Last Updated: 2010-09-17
 Author: Richard Clark - http://richclarkdesign.com 
 Twitter: @rich_clark
+
+edited for brevity for Pictorical
 */
 
-html, body, div, span, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-abbr, address, cite, code,
-del, dfn, em, img, ins, kbd, q, samp,
-small, strong, sub, sup, var,
-b, i,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, figcaption, figure, 
-footer, header, hgroup, menu, nav, section, summary,
-time, mark, audio, video {
+html, body, div, span,
+h1, h2, h3, h4, h5, h6, p, pre, code,
+img, ol, ul, li,
+fieldset, form, label,
+footer, header, menu, nav {
     margin:0;
     padding:0;
     border:0;
@@ -31,23 +26,12 @@ body {
     line-height:1;
 }
 
-article,aside,details,figcaption,figure,
-footer,header,hgroup,menu,nav,section { 
+footer,header,hgroup,menu,nav { 
     display:block;
 }
 
 ul {
     list-style:none;
-}
-
-blockquote, q {
-    quotes:none;
-}
-
-blockquote:before, blockquote:after,
-q:before, q:after {
-    content:'';
-    content:none;
 }
 
 a {
@@ -56,45 +40,6 @@ a {
     font-size:100%;
     vertical-align:baseline;
     background:transparent;
-}
-
-/* change colours to suit your needs */
-ins {
-    background-color:#ff9;
-    color:#000;
-    text-decoration:none;
-}
-
-/* change colours to suit your needs */
-mark {
-    background-color:#ff9;
-    color:#000; 
-    font-style:italic;
-    font-weight:bold;
-}
-
-del {
-    text-decoration: line-through;
-}
-
-abbr[title], dfn[title] {
-    border-bottom:1px dotted;
-    cursor:help;
-}
-
-table {
-    border-collapse:collapse;
-    border-spacing:0;
-}
-
-/* change border colour to suit your needs */
-hr {
-    display:block;
-    height:1px;
-    border:0;   
-    border-top:1px solid #cccccc;
-    margin:1em 0;
-    padding:0;
 }
 
 input, select {
@@ -121,9 +66,9 @@ body#index h1 { text-transform: uppercase; }
 #slideshow { position: relative; font-size:small; display:none; color:white; height: 100%; background-color: black}
 #slideshow a, #slideshow a:visited { color: white }
 #slideshow h1 {font-size: 1.3em; padding: .7em}
-#slideshow nav {padding: 1em}
+#slideshow nav, #slideshow menu {padding: 1em}
 #slideshow div.addthis_toolbox { float:left }
-#slideshow nav, #slideshow h1 {float: left;  z-index:1; position: relative; background: black}
+#slideshow menu, #slideshow h1 {float: left;  z-index:1; position: relative; background: black}
 #slideshow ul { clear: both}
 #slideshow li { height: 100%; width: 100%}
 #slideshow img.slide { height: 100%; margin-left: auto; margin-right: auto; display: block }
@@ -132,7 +77,7 @@ body#index h1 { text-transform: uppercase; }
 #slideshow footer img { padding: 0 1em 0 0;}
 #slideshow footer { float: right; position: absolute; top: 0; right: 0; z-index: 0}
 div.addthis_toolbox {float:left}
-/*a.addthis_button_compact span {display: none}*/
+
 /* styles for auxiliary pages. Adapted from the 100% height stylesheet at http://www.xs4all.nl/~peterned/examples/css/layout1.css */
 body#info { 
 	background: #4B674B;

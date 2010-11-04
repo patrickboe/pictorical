@@ -77,12 +77,9 @@ def build():
     combineName='app-%s' % options.version_name
     combine(mediaDir/"js",
             [
-             'index',
              'measure-maps',
              'jquery.ba-hashchange.min',
-             'jquery.cycle.min',
-             'jquery-ui-1.8.5.custom.min',
-             'modernizr-1.6.min'
+             'index'
              ],combineName)
     combine(mediaDir/"css",['index','jquery-ui-1.8.5.custom'], combineName,'css')
     

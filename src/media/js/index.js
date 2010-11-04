@@ -734,9 +734,9 @@ pictorical= function(){
 				}
 			},
 			
-			modernize=function(){
-				// if placeholder isn't supported:
-				if (typeof Modernizr !== 'undefined' && !Modernizr.input.placeholder){
+			modernize=function(){//was using the modernizr library here - but was using only one function, so why?
+				if(!('placeholder' in document.createElement('input'))){
+					//browser doesn't natively support placeholder attribute
 					$("input[placeholder]").before(function(){
 						var labelMarkup='<label>'+$(this).attr('placeholder')+': </label>';
 						return $(labelMarkup);
