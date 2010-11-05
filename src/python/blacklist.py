@@ -1,19 +1,13 @@
-import os
-import urllib
-
-from google.appengine.ext.webapp import template
+from python import pictorical
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
-from google.appengine.api import urlfetch
-from xml.dom import minidom
-from python import captcha
 
 class BlacklistedFlickrUser(db.Model):
     id = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
     
-class List(webapp.RequestHandler):
+class List(pictorical.RequestHandler):
     def get(self):
         h=self.response.headers
         h["Content-Type"] = "text/javascript"
@@ -23,9 +17,11 @@ class List(webapp.RequestHandler):
         callback=self.request.get('callback')
         self.response.out.write(callback and callback + "(" + blacklist + ");" or blacklist)
 
-class Registration(webapp.RequestHandler):
+class Registration(pictorical.RequestHandler):
+    from python import captcha
+    
     def generateCaptcha(self):
-        return captcha.displayhtml(
+        return self.captcha.displayhtml(
           public_key = "$CONF_recaptcha_public_key",
           use_ssl = False,
           error = None)
@@ -34,7 +30,9 @@ class Registration(webapp.RequestHandler):
         self.__show({'captchahtml': self.generateCaptcha()})
         
     def post(self):
+        from google.appengine.api import urlfetch
         def askForID(username): 
+            import urllib
             restParams={
                         "method": "flickr.people.findByUsername",
                         "api_key": "$CONF_flickr_api_key",
@@ -47,6 +45,7 @@ class Registration(webapp.RequestHandler):
                 return ""
             
         def extractUserId(flickrResponse):
+            from xml.dom import minidom
             if flickrResponse.status_code == 200:
                 dom=minidom.parseString(flickrResponse.content)
                 for node in dom.getElementsByTagName('user'):
@@ -60,11 +59,12 @@ class Registration(webapp.RequestHandler):
                 addition.put()
                 
         def passesCaptcha():
+            import os
             challenge = self.request.get('recaptcha_challenge_field')
             response  = self.request.get('recaptcha_response_field')
             remoteip  = os.environ['REMOTE_ADDR']
             
-            cResponse = captcha.submit(
+            cResponse = self.captcha.submit(
                            challenge,
                            response,
                            "$CONF_recaptcha_private_key",
@@ -86,10 +86,11 @@ class Registration(webapp.RequestHandler):
     
     def __show(self,templateValues):
         templateValues.update({"site":{"name":"$CONF_site_name"},"page":{"title":"Blacklist Your Flickr User ID"}})
-        path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates'),'blacklist.djml')
-        self.response.out.write(template.render(path, templateValues))
+        self.render('blacklist.djml',templateValues)
         
-application = webapp.WSGIApplication([('/blacklist/add', Registration),('/blacklist', List)], debug=$CONF_debug) 
+handlers=[('/blacklist/add', Registration),('/media/blacklist\.js', List)]
+handlers.extend(pictorical.handlers)  
+application = webapp.WSGIApplication(handlers, debug=$CONF_debug) 
 
 def main():
     run_wsgi_app(application)

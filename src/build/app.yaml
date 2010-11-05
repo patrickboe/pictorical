@@ -4,23 +4,6 @@ runtime: python
 api_version: 1
 
 handlers:
-- url: /media
-  static_dir: media
-  expiration: "365d"
-  
-- url: /
-  upload: index.html
-  static_files: index.html
-  mime_type: text/html
-
-- url: /blacklist.*
-  script: python/blacklist.py
- 
-- url: /(\w+)/?
-  upload: .*\.html
-  static_files: \1.html
-  mime_type: text/html
-  
 - url: (/favicon\.ico)
   expiration: "365d"
   upload: media/images/favicon.ico
@@ -30,3 +13,30 @@ handlers:
   expiration: "365d"
   upload: media/data/robots.txt
   static_files: media/data\1
+  
+- url: /(media/)?blacklist.*
+  script: python/blacklist.py
+  
+- url: /media
+  static_dir: media
+  expiration: "365d"
+  
+- url: /
+  upload: index.html
+  static_files: index.html
+  mime_type: text/html
+ 
+- url: /(about|index|terms)
+  upload: \w+\.html
+  static_files: \1.html
+  mime_type: text/html
+  
+- url: /.*
+  script: python/nonesuch.py
+ 
+error_handlers:
+- error_code: default
+  file: content/handlers/error.html
+
+- error_code: over_quota
+  file: content/handlers/whoa.html

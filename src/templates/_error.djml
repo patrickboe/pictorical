@@ -1,0 +1,4 @@
+{% extends "_aux.djml" %}
+{% block content %}
+<p>{{ page.desc }}</p>
+{% endblock %}
