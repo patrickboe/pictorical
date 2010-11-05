@@ -5,8 +5,7 @@
       	{% else %}
       		<p>The User ID we find for your username will be added to the blacklist published with this application, which it then 
       		uses when vetting photos for display. We may contact you at your Flickr account to make sure it was you, and not someone
-      		else, who added you to the blacklist. Once you are added, you should go to the <a href="/">main page</a> and fully refresh
-      		your browser to get the latest application before testing that your photos have been removed.</p>
+      		else, who added you to the blacklist.  Your user id will be on the blacklist within 24 hours.</p>
 	      	{% if error %}
 	      		<p class="error">{{ error }}</p>
 	      	{% endif %}

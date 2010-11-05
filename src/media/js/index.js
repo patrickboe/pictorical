@@ -515,7 +515,7 @@ pictorical= function(){
 		};
 		
 		$.ajax({
-				url: 'media/blacklist.js',
+				url: '$CONF_media_loc/blacklist.js',
 				cache: true,
 				dataType: 'jsonp',
 				jsonpCallback: 'loadFlickrBlacklist',
