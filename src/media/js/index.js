@@ -64,31 +64,37 @@ pictorical= function(){
 			return Math.round(locA.distanceTo(locB));
 		};
 		
-		var drawStartingMap=function(){
-			var tryToGeolocate=function(){
-				/*
-				 * this function is lightly adapted from google's maps api example code at 
-				 * http://code.google.com/apis/maps/documentation/javascript/basics.html#Geolocation
-				 */
-				// Try W3C Geolocation (Preferred)
-				var onFound=function(position){
-					map.setCenter(new google.maps.LatLng(position.latitude,position.longitude));
-				};
-				if(navigator.geolocation) {
-					navigator.geolocation.getCurrentPosition(function(position) { onFound(position.coords); }, noop);
-				// Try Google Gears Geolocation
-				} else if (google.gears) {
-					var geo = google.gears.factory.create('beta.geolocation');
-					geo.getCurrentPosition(onFound,noop);
-				}
-			},
-			isSmall=$(window).width()<900,
-			hardenaRestaurant=new google.maps.LatLng(39.928431,-75.171257),
+		var tryToGeolocate=function(onLocated){
+			/*
+			 * this function is lightly adapted from google's maps api example code at 
+			 * http://code.google.com/apis/maps/documentation/javascript/basics.html#Geolocation
+			 */
+			// Try W3C Geolocation (Preferred)
+			var onNotFound=function(){
+				onLocated(new google.maps.LatLng(39.928431,-75.171257));  //Hardena, my favorite restaurant
+			}
+			var onFound=function(position){
+				onLocated(new google.maps.LatLng(position.latitude,position.longitude));
+			};
+			
+			if(navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(function(position) { onFound(position.coords); }, onNotFound);
+			// Try Google Gears Geolocation
+			} else if (google.gears) {
+				var geo = google.gears.factory.create('beta.geolocation');
+				geo.getCurrentPosition(onFound,onNotFound);
+			} else {
+				onNotFound();
+			}
+		};
+		
+		var drawStartingMap=function(startingPoint){
+			var isSmall=$(window).width()<900,
 			geocoder=new google.maps.Geocoder(),
 			startOptions=
 							{
 								zoom: 13,
-								center: hardenaRestaurant,
+								center: startingPoint,
 								streetViewControl: false,
 								mapTypeControl: false,
 								mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -135,7 +141,6 @@ pictorical= function(){
 				.end()[0],
 			terms=$map.find('footer')[0];
 			map = new google.maps.Map($map[0],startOptions);
-			tryToGeolocate();
 			map.controls[google.maps.ControlPosition[isSmall?"TOP_LEFT":"TOP"]].push(pictoricalTitle);
 			map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchnav);
 			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
@@ -169,16 +174,16 @@ pictorical= function(){
 		};
 		
 		var clearMap=function(){
+			cancelSelectionCallback();
 			if(circle){
 				circle.setMap(null);
 				circle=null;
 			}
+			unlisten(mapClickListener);
 		};
 		
 		var cancelSelection=function(event){
-			cancelSelectionCallback();
 			clearMap();
-			unlisten(mapClickListener);
 			acceptSelections();
 		};
 		
@@ -293,17 +298,34 @@ pictorical= function(){
 			drawCircleAt(selection.getCenter(),selection.getRadius());
 			acceptUpdates();
 			preloaded=true;
-		};
+		},
 		
-		drawStartingMap();
+		showLoadingDialog=function(){
+			$map.addClass('loading');
+		},
+		
+		hideLoadingDialog=function(){
+			$map.removeClass('loading');
+		},
+		
+		onGeolocated=function(startingPoint){ 
+			hideLoadingDialog(); 
+			drawStartingMap(startingPoint); 
+			acceptSelections(); 
+		};
+
 		if(!circle){
-			acceptSelections();
+			showLoadingDialog();
+			tryToGeolocate(onGeolocated);
 		} else {
+			drawStartingMap(circle.getCenter());
 			loadSelection(circle);
 		}
 		return { 
 			redraw: function(){
-				google.maps.event.trigger(map, 'resize');
+				if(map) {
+					google.maps.event.trigger(map, 'resize');
+				}
 				if(preloaded){
 					goToCircle();
 					preloaded=false;
@@ -311,8 +333,10 @@ pictorical= function(){
 			},
 			
 			select: function(selection){
-				clearMap();
-				loadSelection(selection);
+				if(map){
+					clearMap();
+					loadSelection(selection);
+				}
 			}
 		};
 	},

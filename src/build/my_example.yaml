@@ -1,8 +1,8 @@
 app_engine_application: pictoricalmap
 configuration: 
  #uncomment one:
- debug
- #release
+ #debug
+ release
 site_name: SceneChange
 flickr_api_key: 5c047b2b54845211d9662958d1cc5b9d
 google_api_key: ABQIAAAABYlRyNYUhba29cQamRPQKBR8ulp0qGQo-uK4cerJzxtvcpEfYhQUvUPW8MsKBdPRILeaaD87k6iEfw
