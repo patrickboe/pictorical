@@ -660,6 +660,7 @@ pictorical= function(){
 		loader=function(){
 			var showMap=function(){
 				$("#slideshow").hide();
+				document.title=mainTitle;
 				$("#map").show();
 				mapDisplayTools.redraw();
 				if(window.location.hash.length){
@@ -675,12 +676,25 @@ pictorical= function(){
 			
 			loadedHash=null,
 			
+			mainTitle=document.title,
+			
+			updateDocLocation=function(selection){
+				var lat=selection.center.lat(),
+				lng=selection.center.lng(),
+				prettify=function(coord) { return String(Math.round(coord*100)/100); };
+				window.location.hash="slideshow:"+lat+","+lng+","+selection.radius;
+				document.title=document.title.split(":")[0] + 
+					" : Photos at Latitude "+ prettify(lat) +
+					", Longitude "+ prettify(lng) +
+					", Radius "+ selection.radius +"m";
+				loadedHash=window.location.hash;
+			},
+			
 			showSlides=function(selection){
 				$("#map").hide();
 				$("#slideshow").show();
 				if(selection){
-					window.location.hash="slideshow:"+selection.center.lat()+","+selection.center.lng()+","+selection.radius;
-					loadedHash=window.location.hash;
+					updateDocLocation(selection);
 				}
 			},
 			

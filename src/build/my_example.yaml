@@ -1,20 +1,21 @@
-#all examples, including public keys, are Patrick Boe's - you need to replace them for your app.
 app_engine_application: pictoricalmap
 configuration: 
  #uncomment one:
  debug
  #release
-site_name: Scene Change
+site_name: SceneChange
 flickr_api_key: 5c047b2b54845211d9662958d1cc5b9d
 google_api_key: ABQIAAAABYlRyNYUhba29cQamRPQKBR8ulp0qGQo-uK4cerJzxtvcpEfYhQUvUPW8MsKBdPRILeaaD87k6iEfw
 app_engine_path: /opt/google/appengine
 app_engine_python_executable: python2.5
-app_engine_portnum: 8081
+app_engine_portnum: 8080
 live: {
- recaptcha_private_key: [your private key],
- recaptcha_public_key: 6LeZRr4SAAAAAFDl-wcllg86C76Xz2tl6fPSreQG
+ recaptcha_private_key: [your key here],
+ recaptcha_public_key: 6LfDY74SAAAAAD0X9fcRAwQxZs75pr5QJ_0AGXrB,
+ media_loc: "http://media.scenechange.net"
 }
 local: {
- recaptcha_private_key: [your private key],
- recaptcha_public_key: 6LciRr4SAAAAAFr2lPGJS7JfmcBd_UKKj21D9ou4 
+ recaptcha_private_key: [your key here],
+ recaptcha_public_key: 6LciRr4SAAAAAFr2lPGJS7JfmcBd_UKKj21D9ou4,
+ media_loc: /media
 }
