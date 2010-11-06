@@ -775,9 +775,26 @@ pictorical= function(){
 }();
 
 var addthis_config = {
-  data_use_flash: false,
-  data_use_cookies: false,
-  ui_click: true
+	data_use_flash: false,
+	data_use_cookies: false,
+	ui_click: true,
+	services_compact: 'reddit,twitter,facebook,email,messenger,digg,stumbleupon,favorites,delicious,bitly,more'
+};
+
+var addthis_share = {
+	url_transforms: {
+		shorten: {
+			twitter: 'bitly',
+			facebook: 'bitly',
+			messenger: 'bitly'
+		}
+	},
+	shorteners: {
+		bitly: {
+			username: '$CONF_bitly_username',
+			apiKey: '$CONF_bitly_api_key'
+		}
+	}
 };
 
 $(pictorical);
