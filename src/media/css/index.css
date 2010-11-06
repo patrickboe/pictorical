@@ -53,11 +53,12 @@ body, body * {font-family:helvetica,arial,freesans,clean,sans-serif}
 
 /* styles for index page */ 
 body#index h1 { text-transform: uppercase; }
-#map #loadingDialog { display: none; }
+#map #loadingDialog { padding: 1em; display: none; }
 #map.loading #loadingDialog { display: block; }
 #map {height: 100%; width: 100%; display: none; background-color: white }
 #map.loading header, #map.loading nav, #map.loading footer { display: none; }
 #map header, #map nav {color: #4B674B; background-color: #B3D29B; padding: .3em; margin: .5em}
+#map h2 { color: #4B674B }
 #map nav input { color: #4B674B; border-color: #4B674B}
 #map nav label { font-weight: bold }
 #map header { margin-right: 14em;}

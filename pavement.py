@@ -11,7 +11,7 @@ sys.path.append(buildDir.abspath())
 from buildconfig import loadConf
 
 options(
-        version="0.2.5",
+        version="0.2.6",
         version_date="11/06/2010",
         targetEnv="local"
         )
