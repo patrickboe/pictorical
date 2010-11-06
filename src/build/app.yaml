@@ -9,10 +9,10 @@ handlers:
   upload: media/images/favicon.ico
   static_files: media/images\1
 
-- url: (/robots\.txt)
+- url: (/(media/)?robots\.txt)
   expiration: "365d"
   upload: media/data/robots.txt
-  static_files: media/data\1
+  static_files: media/data/robots.txt
   
 - url: /(media/)?blacklist.*
   script: python/blacklist.py
