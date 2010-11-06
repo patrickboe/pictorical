@@ -7,7 +7,9 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 pictorical= function(){
-	var htmlEncode=function(value){ 
+	var noop=function(){},
+	
+	htmlEncode=function(value){ 
 	  return $('<div/>').text(value).html(); 
 	},
 
@@ -18,7 +20,7 @@ pictorical= function(){
 	},
 	
 	trace=function(s) {
-	    try { console.log(s) } catch (e) { alert(s) }
+	    try { console.log(s); } catch (e) { alert(s); }
 	},
 	
 	makeScene=function($map,circle,onSelection,onSelectionLoaded){ //returns a function to be called on show
@@ -29,8 +31,7 @@ pictorical= function(){
 		var geocoder;
 		
 		var displayHint=function(hint,isLoading){
-			$map.find("p.hints")
-				[isLoading?"addClass":"removeClass"]('loading')
+			$map.find("p.hints")[isLoading?"addClass":"removeClass"]('loading')
 				.text(hint);
 		};
 		
@@ -74,13 +75,11 @@ pictorical= function(){
 					map.setCenter(new google.maps.LatLng(position.latitude,position.longitude));
 				};
 				if(navigator.geolocation) {
-					navigator.geolocation.getCurrentPosition(function(position) {
-						onFound(position.coords);
-					});
+					navigator.geolocation.getCurrentPosition(function(position) { onFound(position.coords); }, noop);
 				// Try Google Gears Geolocation
 				} else if (google.gears) {
 					var geo = google.gears.factory.create('beta.geolocation');
-					geo.getCurrentPosition(onFound);
+					geo.getCurrentPosition(onFound,noop);
 				}
 			},
 			isSmall=$(window).width()<900,
@@ -531,7 +530,7 @@ pictorical= function(){
 				var apiUrl="http://api.flickr.com/services/rest/?jsoncallback=?";
 				var apiKey='$CONF_flickr_api_key';
 				var licenses=[];
-				var licensesLoaded=function(){};
+				var licensesLoaded=noop;
 				var photosLoaded=function(photosFoundCallback){
 					var processPhotos=function(data){
 						var photos=[];
@@ -558,7 +557,7 @@ pictorical= function(){
 							//we don't have license information yet. set this to run when we do.
 							licensesLoaded=function(){
 								processPhotos(data);
-								licencesLoaded=function(){};
+								licencesLoaded=noop;
 							};
 						}
 					};
@@ -669,7 +668,7 @@ pictorical= function(){
 			},
 			
 			mapDisplayTools={
-				redraw: function(){}
+				redraw: noop
 			},
 			
 			displaySlideshow=null,
