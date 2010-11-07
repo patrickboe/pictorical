@@ -104,7 +104,7 @@ pictorical= function(){
 			} else {
 				onNotFound();
 			}
-			locationTimeout=window.setTimeout(onNotFound);
+			locationTimeout=window.setTimeout(onNotFound,10000);
 		};
 		
 		var drawStartingMap=function(startingPoint){
