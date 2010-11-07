@@ -61,7 +61,7 @@ body#index h1 { text-transform: uppercase; }
 #map h2 { color: #4B674B }
 #map nav input { color: #4B674B; border-color: #4B674B}
 #map nav label { font-weight: bold }
-#map header { margin-right: 14em;}
+#map header { margin-right: 15em;}
 #map footer nav { padding: 0; color: black; background-color: transparent; margin: 0}
 #map footer {font-size: x-small; padding: .3em; background-color: white;}
 #map header h1, #map header p {float: left}
