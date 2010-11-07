@@ -65,11 +65,21 @@ pictorical= function(){
 		};
 		
 		var tryToGeolocate=function(onLocated){
-			/*
-			 * this function is lightly adapted from google's maps api example code at 
-			 * http://code.google.com/apis/maps/documentation/javascript/basics.html#Geolocation
-			 */
-			var isLocated=false, locationTimeout,
+			var isLocated=false, 
+			locationTimeout,
+			dialogTimeout,
+			
+			showLoadingDialog=function(){
+				$map.addClass('loading');
+			},
+			
+			hideLoadingDialog=function(){
+				$map.removeClass('loading');
+			},
+			
+			onSlow=function(){
+				$map.find('#loadingDialog').text('This is taking a while. May go with Philly.');
+			},
 			
 			onAnyLocated=function(position){ 
 				/*
@@ -79,9 +89,13 @@ pictorical= function(){
 				 */
 				if(!isLocated){
 					isLocated=true;
+					hideLoadingDialog();
 					onLocated(position);
 					if(locationTimeout){
 						window.clearTimeout(locationTimeout);
+					}
+					if(dialogTimeout){
+						window.clearTimeout(dialogTimeout);
 					}
 				}
 			},
@@ -93,7 +107,8 @@ pictorical= function(){
 			onFound=function(position){
 				onAnyLocated(new google.maps.LatLng(position.latitude,position.longitude));
 			};
-			
+
+			showLoadingDialog();
 			// Try W3C Geolocation (Preferred)
 			if(navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(function(position) { onFound(position.coords); }, onNotFound);
@@ -105,6 +120,7 @@ pictorical= function(){
 				onNotFound();
 			}
 			locationTimeout=window.setTimeout(onNotFound,10000);
+			dialogTimeout=window.setTimeout(onSlow,5000);
 		};
 		
 		var drawStartingMap=function(startingPoint){
@@ -319,22 +335,12 @@ pictorical= function(){
 			preloaded=true;
 		},
 		
-		showLoadingDialog=function(){
-			$map.addClass('loading');
-		},
-		
-		hideLoadingDialog=function(){
-			$map.removeClass('loading');
-		},
-		
 		onGeolocated=function(startingPoint){ 
-			hideLoadingDialog(); 
 			drawStartingMap(startingPoint); 
 			acceptSelections();
 		};
 
 		if(!circle){
-			showLoadingDialog();
 			tryToGeolocate(onGeolocated);
 		} else {
 			drawStartingMap(circle.getCenter());
