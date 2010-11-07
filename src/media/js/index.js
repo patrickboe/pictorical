@@ -69,14 +69,32 @@ pictorical= function(){
 			 * this function is lightly adapted from google's maps api example code at 
 			 * http://code.google.com/apis/maps/documentation/javascript/basics.html#Geolocation
 			 */
-			// Try W3C Geolocation (Preferred)
-			var onNotFound=function(){
-				onLocated(new google.maps.LatLng(39.928431,-75.171257));  //Hardena, my favorite restaurant
-			}
-			var onFound=function(position){
-				onLocated(new google.maps.LatLng(position.latitude,position.longitude));
+			var isLocated=false, locationTimeout,
+			
+			onAnyLocated=function(position){ 
+				/*
+				 * handle location found only once; it may be raised more than once due to a timed 
+				 * out location attempt as well as some browsers that seem to raise the located 
+				 * event twice.
+				 */
+				if(!isLocated){
+					isLocated=true;
+					onLocated(position);
+					if(locationTimeout){
+						window.clearTimeout(locationTimeout);
+					}
+				}
+			},
+			
+			onNotFound=function(){
+				onAnyLocated(new google.maps.LatLng(39.928431,-75.171257));  //Hardena, my favorite restaurant
+			},
+			
+			onFound=function(position){
+				onAnyLocated(new google.maps.LatLng(position.latitude,position.longitude));
 			};
 			
+			// Try W3C Geolocation (Preferred)
 			if(navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(function(position) { onFound(position.coords); }, onNotFound);
 			// Try Google Gears Geolocation
@@ -86,6 +104,7 @@ pictorical= function(){
 			} else {
 				onNotFound();
 			}
+			locationTimeout=window.setTimeout(onNotFound);
 		};
 		
 		var drawStartingMap=function(startingPoint){
@@ -311,7 +330,7 @@ pictorical= function(){
 		onGeolocated=function(startingPoint){ 
 			hideLoadingDialog(); 
 			drawStartingMap(startingPoint); 
-			acceptSelections(); 
+			acceptSelections();
 		};
 
 		if(!circle){
