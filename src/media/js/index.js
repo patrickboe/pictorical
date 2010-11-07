@@ -143,6 +143,8 @@ pictorical= function(){
 						map.setCenter(place.location);
 						if(place.bounds){
 							map.fitBounds(place.bounds);
+						} else {
+							map.setZoom(18); //probably an intersection, zoom in a lot
 						}
 						cancelSelection();
 						$(event.target).val("").blur();
