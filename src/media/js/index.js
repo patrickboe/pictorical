@@ -70,6 +70,7 @@ pictorical= function(){
 			dialogTimeout,
 			
 			showLoadingDialog=function(){
+				$map.find('#skipGeolocation').click(onNotFound);
 				$map.addClass('loading');
 			},
 			
@@ -102,10 +103,12 @@ pictorical= function(){
 			
 			onNotFound=function(){
 				onAnyLocated(new google.maps.LatLng(39.928431,-75.171257));  //Hardena, my favorite restaurant
+				return false;
 			},
 			
 			onFound=function(position){
 				onAnyLocated(new google.maps.LatLng(position.latitude,position.longitude));
+				return false;
 			};
 
 			showLoadingDialog();
@@ -141,11 +144,7 @@ pictorical= function(){
 						var place=ui.item.value;
 						this.value=ui.item.label;
 						map.setCenter(place.location);
-						if(place.bounds){
-							map.fitBounds(place.bounds);
-						} else {
-							map.setZoom(18); //probably an intersection, zoom in a lot
-						}
+						map.fitBounds(place.viewport);
 						cancelSelection();
 						$(event.target).val("").blur();
 						return false; //don't populate search box with value
