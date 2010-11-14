@@ -732,7 +732,7 @@ pictorical= function(){
 				var lat=selection.center.lat(),
 				lng=selection.center.lng(),
 				prettify=function(coord) { return String(Math.round(coord*100)/100); };
-				window.location.hash="slideshow:"+lat+","+lng+","+selection.radius;
+				window.location.hash="!slideshow:"+lat+","+lng+","+selection.radius;
 				document.title=document.title.split(":")[0] + 
 					" : Photos at Latitude "+ prettify(lat) +
 					", Longitude "+ prettify(lng) +
@@ -757,7 +757,7 @@ pictorical= function(){
 			
 			hashToSlideshowSelection=function(hash){
 				var keyVal=hash.split(":");
-				var parts= keyVal.length===2 && keyVal[0] === "#slideshow" ? keyVal[1].split(",") : [];
+				var parts= keyVal.length===2 && (keyVal[0] === "#!slideshow" || keyVal[0] === "#slideshow") ? keyVal[1].split(",") : [];
 				if(parts.length){
 					return new google.maps.Circle({
 						  center: new google.maps.LatLng(Number(parts[0]),Number(parts[1])), 
