@@ -9,27 +9,6 @@
 pictorical= (function(){
 	var noop=function(){},
 	
-	knownSmartDevice=(function(){ //user agent checking for touch-specific help text
-		var agentHas=function(token){
-			return (new RegExp('\\b'+ token +'\\b','i')).test(navigator.userAgent);
-		};
-		return (
-				agentHas('(iphone|ipad|ipod|android|windows ce|blackberry|palm)')
-				|| 
-				(agentHas('webkit') && agentHas('(series60|symbian)')) //smart symbian
-			);
-	}()),
-	
-	htmlEncode=function(value){ 
-	  return $('<div/>').text(value).html(); 
-	},
-
-	constructArray = function(arr,constructor){
-		for (var i=0; i<arr.length; i++) {
-			arr[i]=new constructor(arr[i]);
-		}
-	},
-	
 	trace=function(s) {
 	    try { console.log(s); } catch (e) { alert(s); }
 	},
@@ -40,6 +19,17 @@ pictorical= (function(){
 		var selectionHandle;
 		var preloaded;
 		var geocoder;
+		
+		var knownSmartDevice=(function(){ //user agent checking for touch-specific help text
+			var agentHas=function(token){
+				return (new RegExp('\\b'+ token +'\\b','i')).test(navigator.userAgent);
+			};
+			return (
+					agentHas('(iphone|ipad|ipod|android|windows ce|blackberry|palm)')
+					|| 
+					(agentHas('webkit') && agentHas('(series60|symbian)')) //smart symbian
+				);
+		}());
 		
 		var displayHint=function(hint,isLoading){
 			$map.find("p.hints")[isLoading?"addClass":"removeClass"]('loading')
@@ -408,6 +398,9 @@ pictorical= (function(){
 			};
 			
 			var loadPhoto=function(photo, seq, of){
+				var htmlEncode=function(value){ 
+				  return $('<div/>').text(value).html(); 
+				};
 				$slides.append('<li><img class="slide" usemap="#p'+photo.getID()+'" src="'+photo.getUrl()+'"/>'+
 				'<map name="p'+photo.getID()+'">'+
 				'<area shape="rect" class="prev" coords="0,0,40,40" href="#prev" title="Return to Previous Photo" alt="Previous"/>'+
@@ -519,204 +512,213 @@ pictorical= (function(){
 		};
 	},
 	
-	flickr = function(){
-		var flickrBlacklist={},
-		
-		blacklistLoaded=false,
-		blacklistLoadHandlers=[
-			function(blacklist){
-				for (var i=0;i<blacklist.length;i++){
-					flickrBlacklist[blacklist[i]]=1;
-				}
-				blacklistLoaded=true;
+	photoSources=(function(){
+		var constructArray = function(arr,constructor){
+			for (var i=0; i<arr.length; i++) {
+				arr[i]=new constructor(arr[i]);
 			}
-		],
-		
-		onBlacklistLoaded=function(data){
-			for(var i=blacklistLoadHandlers.length-1;i>=0;i--){
-				blacklistLoadHandlers[i](data);
-			}
-		},
-		
-		parseDate= function (flickrDate){
-			var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
-			var dateParts=dateOnly.split("-");
-			return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
-		},
-		
-		PhotoFactory= function(licenses){
-			return function(rawPhoto){
-				var _date=parseDate(rawPhoto.datetaken), that={
-					getID: function(){return "flickr"+String(rawPhoto.id);},
-					getUrl: function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";},
-					getDate: function(){return _date;},
-					getPage: function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id;},
-					getOwnerUrl: function(){return "http://www.flickr.com/people/" + rawPhoto.owner;},
-					getOwnerID: function(){return rawPhoto.owner;},
-					getOwnerName: function(){return rawPhoto.ownername;},
-					getTitle: function(){return rawPhoto.title;},
-					getLicenseSnippet: function(){return licenses[rawPhoto.license];},
-					getApiCredit: function(){return "";},
-					getRaw: function(){return JSON.stringify(rawPhoto);}
-				};
-				return that;
-			};
-		},
-		
-		makeLicenseSnippet= function(license){
-			var snippet="";
-			if(license.url.search('creativecommons.org')>=0){
-				var type=license.url.match(/\/licenses\/(.*\/)/)[1];
-				snippet='<a rel="license" href="'+license.url+'" title="'+license.name+'">'+
-					'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'80x15.png"/></a>';
-			} 
-			snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
-			return snippet;
 		};
-		
-		$.ajax({
-				url: '$CONF_media_loc/blacklist.js',
-				cache: true,
-				dataType: 'jsonp',
-				jsonpCallback: 'loadFlickrBlacklist',
-				success: function(data){ onBlacklistLoaded(data); },
-				error:function(){
-					onBlacklistLoaded(["the loneliest pony"]);
-				}
-			});
-		
 		return {
-			createSource: function()
-			{
-				var apiUrl="http://api.flickr.com/services/rest/?jsoncallback=?";
-				var apiKey='$CONF_flickr_api_key';
-				var licenses=[];
-				var licensesLoaded=noop;
-				var photosLoaded=function(photosFoundCallback){
-					var processPhotos=function(data){
-						var photos=[];
-						var i=0;
-						if(licenses.length){
-							if(blacklistLoaded){
-								if(data.photos){
-									photos=data.photos.photo;
-								}
-								constructArray(photos,PhotoFactory(licenses));
-								for (i=0; i<photos.length; i++) {
-									if(flickrBlacklist[photos[i].getOwnerID()]){
-										photos.splice(i,1);
-										i--;
+			flickr: (function(){
+				var flickrBlacklist={},
+				
+				blacklistLoaded=false,
+				blacklistLoadHandlers=[
+					function(blacklist){
+						for (var i=0;i<blacklist.length;i++){
+							flickrBlacklist[blacklist[i]]=1;
+						}
+						blacklistLoaded=true;
+					}
+				],
+				
+				onBlacklistLoaded=function(data){
+					for(var i=blacklistLoadHandlers.length-1;i>=0;i--){
+						blacklistLoadHandlers[i](data);
+					}
+				},
+				
+				parseDate= function (flickrDate){
+					var dateOnly=flickrDate.substring(0,flickrDate.indexOf(" "));
+					var dateParts=dateOnly.split("-");
+					return new Date(Number(dateParts[0]),Number(dateParts[1]),Number(dateParts[2]));
+				},
+				
+				PhotoFactory= function(licenses){
+					return function(rawPhoto){
+						var _date=parseDate(rawPhoto.datetaken), that={
+							getID: function(){return "flickr"+String(rawPhoto.id);},
+							getUrl: function(){return "http://farm"+rawPhoto.farm+".static.flickr.com/"+rawPhoto.server+"/"+rawPhoto.id+"_"+rawPhoto.secret+".jpg";},
+							getDate: function(){return _date;},
+							getPage: function(){return "http://www.flickr.com/photos/"+rawPhoto.owner+"/"+rawPhoto.id;},
+							getOwnerUrl: function(){return "http://www.flickr.com/people/" + rawPhoto.owner;},
+							getOwnerID: function(){return rawPhoto.owner;},
+							getOwnerName: function(){return rawPhoto.ownername;},
+							getTitle: function(){return rawPhoto.title;},
+							getLicenseSnippet: function(){return licenses[rawPhoto.license];},
+							getApiCredit: function(){return "";},
+							getRaw: function(){return JSON.stringify(rawPhoto);}
+						};
+						return that;
+					};
+				},
+				
+				makeLicenseSnippet= function(license){
+					var snippet="";
+					if(license.url.search('creativecommons.org')>=0){
+						var type=license.url.match(/\/licenses\/(.*\/)/)[1];
+						snippet='<a rel="license" href="'+license.url+'" title="'+license.name+'">'+
+							'<img alt="Creative Commons License" src="http://i.creativecommons.org/l/'+type+'80x15.png"/></a>';
+					} 
+					snippet+='<a rel="license" href="'+license.url+'">'+license.name+'</a>';
+					return snippet;
+				};
+				
+				$.ajax({
+						url: '$CONF_media_loc/blacklist.js',
+						cache: true,
+						dataType: 'jsonp',
+						jsonpCallback: 'loadFlickrBlacklist',
+						success: function(data){ onBlacklistLoaded(data); },
+						error:function(){
+							onBlacklistLoaded(["the loneliest pony"]);
+						}
+					});
+				
+				return {
+					createSource: function()
+					{
+						var apiUrl="http://api.flickr.com/services/rest/?jsoncallback=?";
+						var apiKey='$CONF_flickr_api_key';
+						var licenses=[];
+						var licensesLoaded=noop;
+						var photosLoaded=function(photosFoundCallback){
+							var processPhotos=function(data){
+								var photos=[];
+								var i=0;
+								if(licenses.length){
+									if(blacklistLoaded){
+										if(data.photos){
+											photos=data.photos.photo;
+										}
+										constructArray(photos,PhotoFactory(licenses));
+										for (i=0; i<photos.length; i++) {
+											if(flickrBlacklist[photos[i].getOwnerID()]){
+												photos.splice(i,1);
+												i--;
+											}
+										}
+										photosFoundCallback(photos);
+									} else {
+										blacklistLoadHandlers.push(function(blacklist){
+											processPhotos(data);
+										});
 									}
+								} else{
+									//we don't have license information yet. set this to run when we do.
+									licensesLoaded=function(){
+										processPhotos(data);
+										licencesLoaded=noop;
+									};
 								}
-								photosFoundCallback(photos);
-							} else {
-								blacklistLoadHandlers.push(function(blacklist){
-									processPhotos(data);
-								});
-							}
-						} else{
-							//we don't have license information yet. set this to run when we do.
-							licensesLoaded=function(){
-								processPhotos(data);
-								licencesLoaded=noop;
 							};
+							return processPhotos;
+						};
+						$.getJSON(apiUrl,
+								{
+									method: 'flickr.photos.licenses.getInfo',
+									format: 'json',
+									api_key: apiKey
+								},
+								function(data){
+									if(data.licenses.license){
+										licenses=data.licenses.license;
+										licenses.sort(function(a,b){
+											return a.id>b.id;
+										});
+										for (var i=0;i<licenses.length;i++) {licenses[i]=makeLicenseSnippet(licenses[i]);}
+										licensesLoaded();
+									}
+								});
+						return function(selectedCircle, photosFoundCallback){
+							$.getJSON(apiUrl,
+								{
+										method: 'flickr.photos.search',
+										format: 'json',
+										api_key: apiKey,
+										lat: String(selectedCircle.getCenter().lat()),
+										lon: String(selectedCircle.getCenter().lng()),
+										radius: String(selectedCircle.getRadius()/1000.0),
+										min_upload_date: '2003-12-31 00:00:00',
+										license: '1,2,3,4,5,6,7,8',
+										sort: 'interestingness-desc',
+										extras: 'license,date_taken,owner_name',
+										per_page: 30 //flickr's terms of service specifies a max of 30 per page
+								},
+								photosLoaded(photosFoundCallback)
+							);
+						};
+					}
+				};
+			}()),
+			
+			panoramio: (function(){
+				var Photo=
+					function(rawPhoto){
+						return {
+							getID: function(){return "pano"+String(rawPhoto.photo_id);},
+							getUrl: function(){return rawPhoto.photo_file_url;},
+							getDate: function(){return new Date(rawPhoto.upload_date);},
+							getPage: function(){return rawPhoto.photo_url;},
+							getOwnerUrl: function(){return rawPhoto.owner_url;},
+							getOwnerName: function(){return rawPhoto.owner_name;},
+							getTitle: function(){return rawPhoto.photo_title;},
+							getLicenseSnippet: function(){return "";},
+							getApiCredit: function(){
+								return '<a target="_top" href="http://www.panoramio.com">'+
+								'<img width="67" height="14" src="http://www.panoramio.com/img/logo-tos.png">'+
+								'</a>'+
+								'<span>Photos are copyrighted by their owners</span>';
+							},
+							getRaw: function(){return JSON.stringify(rawPhoto);}
+						};
+					};
+				return {
+					requestPhotos: function(selectedCircle,photosFoundCallback){
+						var bounds=selectedCircle.getBounds();
+						var ne=bounds.getNorthEast();
+						var sw=bounds.getSouthWest();
+						/**
+						 * Turns out they don't really mean min and max, they mean westernmost & 
+						 * easternmost / northernmost & southernmost - tested on the international dateline.
+						 * This method still seems to work on the south pole, though I don't think 
+						 * I quite comprehend why. Is this wrong, and do you care? If so, let me 
+						 * know. -Patrick Boe
+						 */
+						$.getJSON("http://www.panoramio.com/map/get_panoramas.php?callback=?",
+								{
+									set:"public",
+									from:0,
+									to:30,
+									minx:sw.lng(),
+									miny:sw.lat(),
+									maxx:ne.lng(),
+									maxy:ne.lat(),
+									size:"medium"
+								},
+								function(data){
+									var photos=[];
+									if(data.count){
+										photos=data.photos;
+									}
+									constructArray(photos,Photo);
+									photosFoundCallback(photos);
+								});
 						}
 					};
-					return processPhotos;
-				};
-				$.getJSON(apiUrl,
-						{
-							method: 'flickr.photos.licenses.getInfo',
-							format: 'json',
-							api_key: apiKey
-						},
-						function(data){
-							if(data.licenses.license){
-								licenses=data.licenses.license;
-								licenses.sort(function(a,b){
-									return a.id>b.id;
-								});
-								for (var i=0;i<licenses.length;i++) {licenses[i]=makeLicenseSnippet(licenses[i]);}
-								licensesLoaded();
-							}
-						});
-				return function(selectedCircle, photosFoundCallback){
-					$.getJSON(apiUrl,
-						{
-								method: 'flickr.photos.search',
-								format: 'json',
-								api_key: apiKey,
-								lat: String(selectedCircle.getCenter().lat()),
-								lon: String(selectedCircle.getCenter().lng()),
-								radius: String(selectedCircle.getRadius()/1000.0),
-								min_upload_date: '2003-12-31 00:00:00',
-								license: '1,2,3,4,5,6,7,8',
-								sort: 'interestingness-desc',
-								extras: 'license,date_taken,owner_name',
-								per_page: 30 //flickr's terms of service specifies a max of 30 per page
-						},
-						photosLoaded(photosFoundCallback)
-					);
-				};
-			}
-		};
-	}(),
-	
-	panoramio= function(){
-		var Photo=
-			function(rawPhoto){
-				return {
-					getID: function(){return "pano"+String(rawPhoto.photo_id);},
-					getUrl: function(){return rawPhoto.photo_file_url;},
-					getDate: function(){return new Date(rawPhoto.upload_date);},
-					getPage: function(){return rawPhoto.photo_url;},
-					getOwnerUrl: function(){return rawPhoto.owner_url;},
-					getOwnerName: function(){return rawPhoto.owner_name;},
-					getTitle: function(){return rawPhoto.photo_title;},
-					getLicenseSnippet: function(){return "";},
-					getApiCredit: function(){
-						return '<a target="_top" href="http://www.panoramio.com">'+
-						'<img width="67" height="14" src="http://www.panoramio.com/img/logo-tos.png">'+
-						'</a>'+
-						'<span>Photos are copyrighted by their owners</span>';
-					},
-					getRaw: function(){return JSON.stringify(rawPhoto);}
-				};
+				}())
 			};
-		return {
-			requestPhotos: function(selectedCircle,photosFoundCallback){
-				var bounds=selectedCircle.getBounds();
-				var ne=bounds.getNorthEast();
-				var sw=bounds.getSouthWest();
-				/**
-				 * Turns out they don't really mean min and max, they mean westernmost & 
-				 * easternmost / northernmost & southernmost - tested on the international dateline.
-				 * This method still seems to work on the south pole, though I don't think 
-				 * I quite comprehend why. Is this wrong, and do you care? If so, let me 
-				 * know. -Patrick Boe
-				 */
-				$.getJSON("http://www.panoramio.com/map/get_panoramas.php?callback=?",
-						{
-							set:"public",
-							from:0,
-							to:30,
-							minx:sw.lng(),
-							miny:sw.lat(),
-							maxx:ne.lng(),
-							maxy:ne.lat(),
-							size:"medium"
-						},
-						function(data){
-							var photos=[];
-							if(data.count){
-								photos=data.photos;
-							}
-							constructArray(photos,Photo);
-							photosFoundCallback(photos);
-						});
-				}
-			};
-		}(), 
+		}()),
 		
 		loader=function(){
 			var showMap=function(){
@@ -785,7 +787,7 @@ pictorical= (function(){
 				}
 			},
 			
-			slideSources=[flickr.createSource(),panoramio.requestPhotos],
+			slideSources=[photoSources.flickr.createSource(),photoSources.panoramio.requestPhotos],
 			
 			onHashChange=function(){
 				if(window.location.hash==="" || window.location.hash==="#") {
@@ -818,6 +820,30 @@ pictorical= (function(){
 				}
 			};
 			
+			//addthis globals: 
+			addthis_config = {
+				data_use_flash: false,
+				data_use_cookies: false,
+				ui_click: true,
+				services_compact: 'reddit,twitter,facebook,email,messenger,digg,stumbleupon,favorites,delicious,bitly,more'
+			};
+
+			addthis_share = {
+				url_transforms: {
+					shorten: {
+						facebook: 'bitly',
+						twitter: 'bitly',
+						messenger: 'bitly'
+					}
+				},
+				shorteners: {
+					bitly: {
+						username: '$CONF_bitly_username',
+						apiKey: '$CONF_bitly_api_key'
+					}
+				}
+			};
+			
 			return function(){
 				var selection=null;
 				modernize();
@@ -834,28 +860,5 @@ pictorical= (function(){
 		
 		return loader;
 }());
-
-var addthis_config = {
-	data_use_flash: false,
-	data_use_cookies: false,
-	ui_click: true,
-	services_compact: 'reddit,twitter,facebook,email,messenger,digg,stumbleupon,favorites,delicious,bitly,more'
-};
-
-var addthis_share = {
-	url_transforms: {
-		shorten: {
-			twitter: 'bitly',
-			facebook: 'bitly',
-			messenger: 'bitly'
-		}
-	},
-	shorteners: {
-		bitly: {
-			username: '$CONF_bitly_username',
-			apiKey: '$CONF_bitly_api_key'
-		}
-	}
-};
 
 $(pictorical);
