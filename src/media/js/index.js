@@ -6,8 +6,19 @@
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.gnu.org/licenses/gpl.html
  */
-pictorical= function(){
+pictorical= (function(){
 	var noop=function(){},
+	
+	knownSmartDevice=(function(){ //user agent checking for touch-specific help text
+		var agentHas=function(token){
+			return (new RegExp('\\b'+ token +'\\b','i')).test(navigator.userAgent);
+		};
+		return (
+				agentHas('(iphone|ipad|ipod|android|windows ce|blackberry|palm)')
+				|| 
+				(agentHas('webkit') && agentHas('(series60|symbian)')) //smart symbian
+			);
+	}()),
 	
 	htmlEncode=function(value){ 
 	  return $('<div/>').text(value).html(); 
@@ -226,7 +237,7 @@ pictorical= function(){
 		var acceptSelections=function(){
 			updateMapClickBehavior(function(event){
 				drawCircleAt(event.latLng);
-				displayHint("Move to resize, then click again.");
+				displayHint(knownSmartDevice ? "Click off to resize, click on to accept." : "Move to resize, then click again.");
 				acceptResizing();
 			});
 		};
@@ -822,7 +833,7 @@ pictorical= function(){
 		}();
 		
 		return loader;
-}();
+}());
 
 var addthis_config = {
 	data_use_flash: false,

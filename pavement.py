@@ -3,6 +3,7 @@ import string
 import re
 import sys
 import subprocess
+from datetime import date
 
 deployDir = path("deploy")
 srcDir = path("src")
@@ -11,8 +12,8 @@ sys.path.append(buildDir.abspath())
 from buildconfig import loadConf
 
 options(
-        version="0.2.14",
-        version_date="11/14/2010",
+        version=sh("git describe --tags",capture=True).strip(),
+        version_date=date.today(),
         targetEnv="local"
         )
 
