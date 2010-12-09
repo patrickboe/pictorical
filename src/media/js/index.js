@@ -19,6 +19,7 @@ pictorical= (function(){
 		var selectionHandle;
 		var preloaded;
 		var geocoder;
+		var hardena=new google.maps.LatLng(39.928431,-75.171257); //my favorite restaurant
 		
 		var knownSmartDevice=(function(){ //user agent checking for touch-specific help text
 			var agentHas=function(token){
@@ -63,68 +64,6 @@ pictorical= (function(){
 		
 		var distanceInMeters=function(locA,locB){
 			return Math.round(locA.distanceTo(locB));
-		};
-		
-		var tryToGeolocate=function(onLocated){
-			var isLocated=false, 
-			locationTimeout,
-			dialogTimeout,
-			
-			showLoadingDialog=function(){
-				$map.find('#skipGeolocation').click(onNotFound);
-				$map.addClass('loading');
-			},
-			
-			hideLoadingDialog=function(){
-				$map.removeClass('loading');
-			},
-			
-			onSlow=function(){
-				$map.find('#loadingDialog').text('This is taking a while. May go with Philly.');
-			},
-			
-			onAnyLocated=function(position){ 
-				/*
-				 * handle location found only once; it may be raised more than once due to a timed 
-				 * out location attempt as well as some browsers that seem to raise the located 
-				 * event twice.
-				 */
-				if(!isLocated){
-					isLocated=true;
-					hideLoadingDialog();
-					onLocated(position);
-					if(locationTimeout){
-						window.clearTimeout(locationTimeout);
-					}
-					if(dialogTimeout){
-						window.clearTimeout(dialogTimeout);
-					}
-				}
-			},
-			
-			onNotFound=function(){
-				onAnyLocated(new google.maps.LatLng(39.928431,-75.171257));  //Hardena, my favorite restaurant
-				return false;
-			},
-			
-			onFound=function(position){
-				onAnyLocated(new google.maps.LatLng(position.latitude,position.longitude));
-				return false;
-			};
-
-			showLoadingDialog();
-			// Try W3C Geolocation (Preferred)
-			if(navigator.geolocation) {
-				navigator.geolocation.getCurrentPosition(function(position) { onFound(position.coords); }, onNotFound);
-			// Try Google Gears Geolocation
-			} else if (google.gears) {
-				var geo = google.gears.factory.create('beta.geolocation');
-				geo.getCurrentPosition(onFound,onNotFound);
-			} else {
-				onNotFound();
-			}
-			locationTimeout=window.setTimeout(onNotFound,10000);
-			dialogTimeout=window.setTimeout(onSlow,5000);
 		};
 		
 		var drawStartingMap=function(startingPoint){
@@ -337,13 +276,13 @@ pictorical= (function(){
 			preloaded=true;
 		},
 		
-		onGeolocated=function(startingPoint){ 
+		startAt=function(startingPoint){ 
 			drawStartingMap(startingPoint); 
 			acceptSelections();
 		};
 
 		if(!circle){
-			tryToGeolocate(onGeolocated);
+			startAt(hardena);
 		} else {
 			drawStartingMap(circle.getCenter());
 			loadSelection(circle);
