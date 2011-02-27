@@ -69,6 +69,68 @@ pictorical= (function(){
 			return Math.round(locA.distanceTo(locB));
 		};
 		
+		var tryToGeolocate=function(onLocated){
+			var isLocated=false, 
+			locationTimeout,
+			dialogTimeout,
+			
+			showLoadingDialog=function(){
+				$map.find('#skipGeolocation').click(onNotFound);
+				$map.addClass('loading');
+			},
+			
+			hideLoadingDialog=function(){
+				$map.removeClass('loading');
+			},
+			
+			onSlow=function(){
+				$map.find('#loadingDialog').text('This is taking a while. May go with Philly.');
+			},
+			
+			onAnyLocated=function(position){ 
+				/*
+				 * handle location found only once; it may be raised more than once due to a timed 
+				 * out location attempt as well as some browsers that seem to raise the located 
+				 * event twice.
+				 */
+				if(!isLocated){
+					isLocated=true;
+					hideLoadingDialog();
+					onLocated(position);
+					if(locationTimeout){
+						window.clearTimeout(locationTimeout);
+					}
+					if(dialogTimeout){
+						window.clearTimeout(dialogTimeout);
+					}
+				}
+			},
+			
+			onNotFound=function(){
+				onAnyLocated(new google.maps.LatLng(39.928431,-75.171257));  //Hardena, my favorite restaurant
+				return false;
+			},
+			
+			onFound=function(position){
+				onAnyLocated(new google.maps.LatLng(position.latitude,position.longitude));
+				return false;
+			};
+
+			showLoadingDialog();
+			// Try W3C Geolocation (Preferred)
+			if(navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(function(position) { onFound(position.coords); }, onNotFound);
+			// Try Google Gears Geolocation
+			} else if (google.gears) {
+				var geo = google.gears.factory.create('beta.geolocation');
+				geo.getCurrentPosition(onFound,onNotFound);
+			} else {
+				onNotFound();
+			}
+			locationTimeout=window.setTimeout(onNotFound,10000);
+			dialogTimeout=window.setTimeout(onSlow,5000);
+		};
+		
 		var drawStartingMap=function(startingPoint){
 			var isSmall=$(window).width()<900,
 			geocoder=new google.maps.Geocoder(),
@@ -292,7 +354,7 @@ pictorical= (function(){
 		};
 
 		if(!circle){
-			startAt(hardena);
+			tryToGeolocate(startAt);
 		} else {
 			drawStartingMap(circle.getCenter());
 			loadSelection(circle);
