@@ -66,8 +66,10 @@ body#index h1 { text-transform: uppercase; }
 #map footer {font-size: x-small; padding: .3em; background-color: white;}
 #map header h1, #map header p {float: left}
 #map header h1 { margin-right: .5em; }
-#map .hints {text-shadow: -0.1em -0.1em #FFF, 0.1em 0.1em #FFF, 0.1em -0.1em #FFF, -0.1em 0.1em #FFF; font-weight: bold}
-#map .hints.loading {color: red; text-shadow: none}
+#map .hints {text-shadow: -0.1em -0.1em #FFF, 0.1em 0.1em #FFF, 0.1em -0.1em #FFF, -0.1em 0.1em #FFF; font-weight: bold;}
+#map .hints .loading {color: red;}
+#map header em {color: #B3D29B; font-style: normal; text-shadow: none;}
+#map header.emphasized em {color: inherit; text-shadow: inherit;}
 #slideshow { position: relative; font-size:small; display:none; color:white; height: 100%; background-color: black}
 #slideshow a, #slideshow a:visited { color: white }
 #slideshow h1 {font-size: 1.3em; padding: .7em}

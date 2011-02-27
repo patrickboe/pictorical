@@ -33,8 +33,11 @@ pictorical= (function(){
 		}());
 		
 		var displayHint=function(hint,isLoading){
-			$map.find("p.hints")[isLoading?"addClass":"removeClass"]('loading')
-				.text(hint);
+			$map.find('p.hints')
+				.stop()
+				.css('color','red')
+				.animate({color:'#4B674B'},2000)
+				.find('.text').text(hint);
 		};
 		
 		var unlisten=function(listener){
@@ -77,7 +80,7 @@ pictorical= (function(){
 								mapTypeControl: false,
 								mapTypeId: google.maps.MapTypeId.ROADMAP
 							},
-			pictoricalTitle=$map.find('header')[0],
+			$pictoricalTitle=$map.find('header'),
 			searchnav=$map.find('nav')
 				.find('input').autocomplete({
 					select: function(event,ui){
@@ -117,12 +120,19 @@ pictorical= (function(){
 				.end()[0],
 			terms=$map.find('footer')[0];
 			map = new google.maps.Map($map[0],startOptions);
-			map.controls[google.maps.ControlPosition[isSmall?"TOP_LEFT":"TOP"]].push(pictoricalTitle);
+			map.controls[google.maps.ControlPosition[isSmall?"TOP_LEFT":"TOP"]].push($pictoricalTitle[0]);
 			map.controls[google.maps.ControlPosition.TOP_RIGHT].push(searchnav);
 			map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(terms);
+			emphasize($pictoricalTitle);
 			google.maps.event.addListener(map,"click",function(){
 				$map.find('nav input').autocomplete('close');
 			});
+		};
+		
+		var emphasize=function($element){
+			window.setInterval(function(){
+				$element.toggleClass('emphasized');
+			},800);
 		};
 		
 		var drawCircleAt=function(location,radius) {
